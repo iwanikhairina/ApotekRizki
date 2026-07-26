@@ -35,7 +35,6 @@ class RegisterController extends Controller
             'password'   => ['required', 'confirmed', Rules\Password::min(8)->letters()->numbers()],
             'birth_date' => ['nullable', 'date', 'before:today'],
             'gender'     => ['nullable', 'in:L,P'],
-            'terms'      => ['required', 'accepted'],
         ], [
             'name.required'       => 'Nama lengkap wajib diisi.',
             'email.required'      => 'Email wajib diisi.',
@@ -51,8 +50,6 @@ class RegisterController extends Controller
             'birth_date.date'     => 'Format tanggal lahir tidak valid.',
             'birth_date.before'   => 'Tanggal lahir tidak valid.',
             'gender.in'           => 'Jenis kelamin tidak valid.',
-            'terms.required'      => 'Kamu harus menyetujui Syarat & Ketentuan dan Kebijakan Privasi.',
-            'terms.accepted'      => 'Kamu harus menyetujui Syarat & Ketentuan dan Kebijakan Privasi.',
         ]);
 
         $user = User::create([

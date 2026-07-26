@@ -135,17 +135,20 @@
     }
 
     .dropzone-icon{
-        width:60px; height:60px;
-        border-radius:50%;
-        background:var(--mint);
-        color:var(--spring-deep);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        margin-bottom:8px;
-        transition:background .18s;
-    }
-    .dropzone-icon svg{width:26px; height:26px;}
+    width:60px; height:60px;
+    border-radius:50%;
+    background:var(--mint);
+    color:var(--spring-deep);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 8px;
+    transition:background .18s;
+}
+.dropzone-icon svg{
+    width:26px; height:26px;
+    display:block;
+}
 
     .dropzone-title{
         font-family:'Outfit', sans-serif;
