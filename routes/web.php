@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\ResepController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerDashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProfileController;
@@ -25,7 +26,6 @@ use App\Http\Controllers\Admin\ObatController;
 use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\AlamatController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,7 +51,7 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->name('logout');
 
 // Dashboard pelanggan
-Route::get('/dashboard', [CustomerController::class, 'dashboard'])
+Route::get('/dashboard', [CustomerDashboardController::class, 'index'])
     ->middleware('auth')
     ->name('dashboard');
 
@@ -70,11 +70,16 @@ Route::post('/resep/upload', [ResepController::class, 'store'])
     ->middleware('auth')
     ->name('resep.store');
 
-    // Daftar pesanan pelanggan
+Route::post('/pesanan/{code}/upload-resep', [PesananController::class, 'uploadResep'])
+    ->middleware('auth')
+    ->name('pesanan.upload-resep');
+
+// Daftar pesanan pelanggan
 Route::get('/pesanan', [PesananController::class, 'index'])
     ->middleware('auth')
     ->name('pesanan.index');
-    Route::post('/pesanan/{code}/terima', [PesananController::class, 'konfirmasiDiterima'])
+
+Route::post('/pesanan/{code}/terima', [PesananController::class, 'konfirmasiDiterima'])
     ->middleware('auth')
     ->name('pesanan.terima');
 
@@ -82,8 +87,15 @@ Route::get('/pesanan/{code}', [PesananController::class, 'show'])
     ->middleware('auth')
     ->name('pesanan.detail');
 
-// Keranjang belanja (sementara belum tersambung ke database — lihat catatan di CartController)
-// Keranjang belanja
+Route::post('/pesanan/{code}/batalkan', [PesananController::class, 'batalkan'])
+    ->middleware('auth')
+    ->name('pesanan.batalkan');
+
+Route::post('/pesanan/{code}/bayar', [PesananController::class, 'pilihPembayaran'])
+    ->middleware('auth')
+    ->name('pesanan.bayar');
+
+// Keranjang belanja & Checkout
 Route::middleware('auth')->group(function () {
     Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index');
     Route::post('/keranjang/tambah/{obat}', [CartController::class, 'store'])->name('cart.add');
@@ -118,7 +130,9 @@ Route::middleware('auth')->prefix('apoteker')->name('apoteker.')->group(function
     Route::get('/verifikasi-obat', [ApotekerVerifikasiController::class, 'index'])->name('verifikasi');
     Route::get('/verifikasi-obat/{id}', [ApotekerVerifikasiController::class, 'show'])->name('verifikasi.detail');
     Route::post('/verifikasi-obat/{id}/setujui', [ApotekerVerifikasiController::class, 'setujui'])->name('verifikasi.setujui');
-    Route::post('/verifikasi-obat/{id}/tolak', [ApotekerVerifikasiController::class, 'tolak'])->name('verifikasi.tolak');
+    Route::post('/verifikasi-obat/{id}/tambah-obat', [ApotekerVerifikasiController::class, 'tambahObat'])->name('verifikasi.tambah-obat');
+    Route::delete('/verifikasi-obat/{id}/hapus-obat/{detailId}', [ApotekerVerifikasiController::class, 'hapusObat'])->name('verifikasi.hapus-obat');
+Route::post('/verifikasi-obat/{id}/tolak', [ApotekerVerifikasiController::class, 'tolak'])->name('verifikasi.tolak');
 
     Route::get('/profil', [ApotekerProfilController::class, 'index'])->name('profil');
     Route::post('/profil/update', [ApotekerProfilController::class, 'updateProfile'])->name('profil.update');
@@ -182,18 +196,4 @@ Route::prefix('admin')
         Route::prefix('laporan')->name('laporan.')->group(function () {
             Route::get('/', [LaporanController::class, 'index'])->name('index');
         });
-
-        // Route untuk Profil menyusul...
-    });
-
-    Route::post('/forgot-password/send-otp', [ForgotPasswordController::class, 'sendOtp'])
-    ->middleware('throttle:3,1')
-    ->name('forgot-password.send-otp');
-
-Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])
-    ->middleware('throttle:5,1')
-    ->name('forgot-password.verify-otp');
-
-Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'reset'])
-    ->middleware('throttle:5,1')
-    ->name('forgot-password.reset');
+});

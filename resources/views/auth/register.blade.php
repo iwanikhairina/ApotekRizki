@@ -356,7 +356,6 @@
 
         <div class="heading">
             <h1>Buat akun baru</h1>
-            <p>Daftar untuk mulai mengelola apotek kamu</p>
         </div>
 
         @if ($errors->any())
@@ -451,15 +450,7 @@
                 </div>
             </div>
 
-            <div class="consent">
-                <input type="checkbox" id="terms" name="terms" value="1" {{ old('terms') ? 'checked' : '' }} required>
-                <label for="terms">
-                    Saya menyetujui <a href="{{ \Illuminate\Support\Facades\Route::has('terms') ? route('terms') : '#' }}" target="_blank">Syarat &amp; Ketentuan</a>
-                    dan <a href="{{ \Illuminate\Support\Facades\Route::has('privacy') ? route('privacy') : '#' }}" target="_blank">Kebijakan Privasi</a> Apotek Rizki.
-                </label>
-            </div>
-            @error('terms')<div class="error-text" style="margin-top:-10px; margin-bottom:16px;">{{ $message }}</div>@enderror
-
+            
             <button type="submit" class="btn-register">
                 Daftar sekarang
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>

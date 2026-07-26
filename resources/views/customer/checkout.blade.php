@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Checkout - Apotek Rizki</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,84 +23,100 @@
         --shadow-md:0 20px 40px -16px rgba(29,43,38,0.18);
     }
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Inter', sans-serif; background:var(--mint); color:var(--ink); -webkit-font-smoothing:antialiased; padding-bottom:110px;}
+    body{font-family:'Inter', sans-serif; background:var(--mint); color:var(--ink); -webkit-font-smoothing:antialiased; padding-bottom:100px;}
     a{text-decoration:none; color:inherit;}
     button{font-family:inherit;}
 
     .navbar{position:sticky; top:0; z-index:50; background:var(--white); border-bottom:1px solid var(--mint-deep);}
-    .navbar-inner{max-width:900px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:12px;}
+    .navbar-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:12px;}
     .back-link{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14.5px; color:var(--ink);}
     .back-link svg{width:20px; height:20px;}
-    .nav-title{font-family:'Outfit', sans-serif; font-weight:700; font-size:16px;}
+    .nav-title{font-family:'Outfit', sans-serif; font-weight:700; font-size:16px; margin-right:auto;}
 
-    .page-wrap{max-width:900px; margin:0 auto; padding:0 0 20px;}
+    .page-wrap{max-width:760px; margin:0 auto; padding:20px 20px 40px;}
 
-    .alert{margin:14px 14px 0; border-radius:14px; padding:13px 16px; font-size:13px; line-height:1.5;}
-    .alert-error{background:#FBEAEA; border:1px solid #F3D0CE; color:#9B3A2E;}
-    .alert-success{background:#E3F5EA; border:1px solid #BEE6CE; color:var(--spring-deep);}
+    .flash-success{background:#E3F5EA; border:1px solid var(--mint-deep); color:var(--spring-deep); padding:12px 16px; border-radius:12px; font-size:13.5px; font-weight:600; margin-bottom:16px;}
+    .flash-error{background:#FBE8E6; border:1px solid #f3c8c2; color:#B23A29; padding:12px 16px; border-radius:12px; font-size:13.5px; font-weight:600; margin-bottom:16px;}
 
-    .section{
-        background:var(--white);
-        margin:14px 14px 0;
-        border-radius:16px;
-        padding:16px;
-        box-shadow:var(--shadow-sm);
+    .card{background:var(--white); border-radius:20px; box-shadow:var(--shadow-sm); padding:20px 22px; margin-bottom:16px;}
+
+    .card-title{
+        display:flex; align-items:center; gap:8px;
+        font-family:'Outfit', sans-serif; font-size:14px; font-weight:700;
+        color:var(--spring-deep); text-transform:uppercase; letter-spacing:.03em;
+        margin-bottom:14px;
     }
-    .section-title{font-family:'Outfit', sans-serif; font-weight:700; font-size:14.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
-    .section-title svg{width:18px; height:18px; color:var(--spring);}
+    .card-title svg{width:16px; height:16px;}
 
-    .addr-block{font-size:13px; line-height:1.6;}
-    .addr-block b{display:block; font-size:13.5px; margin-bottom:2px;}
-    .addr-block .muted{color:var(--muted); font-size:12px;}
+    /* alamat */
+    .addr-row{display:flex; align-items:flex-start; gap:12px;}
+    .addr-row svg{width:20px; height:20px; color:var(--spring); flex-shrink:0; margin-top:2px;}
+    .addr-row p{font-size:13.5px; line-height:1.5;}
+    .addr-row p b{display:block; font-size:14px; margin-bottom:2px;}
+    .addr-change{display:inline-block; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--spring-deep);}
 
-    .item-row{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--mint); font-size:13px;}
-    .item-row:last-child{border-bottom:none;}
-    .item-row .item-name{font-weight:600;}
-    .item-row .item-qty{color:var(--muted); font-size:12px;}
-    .item-row .item-price{font-family:'Outfit', sans-serif; font-weight:700; font-size:13px;}
-    .badge-resep{display:inline-block; margin-left:6px; font-size:10px; font-weight:700; background:var(--peach, #FFE4D8); color:#B23A29; padding:2px 7px; border-radius:999px;}
+    /* daftar item */
+    .co-item{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--mint); font-size:13.5px;}
+    .co-item:last-child{border-bottom:none;}
+    .co-item .name{font-weight:600;}
+    .co-item .qty{color:var(--muted); font-size:12px; margin-top:2px;}
+    .co-item .price{font-family:'Outfit', sans-serif; font-weight:700; flex-shrink:0; margin-left:12px;}
 
-    .summary-row{display:flex; justify-content:space-between; font-size:13px; padding:5px 0; color:var(--muted);}
-    .summary-row.total{font-weight:800; font-size:15px; color:var(--ink); border-top:1px solid var(--mint-deep); margin-top:6px; padding-top:10px;}
-    .summary-row.total span:last-child{color:var(--spring-deep); font-family:'Outfit', sans-serif;}
-
-    .pay-options{display:flex; flex-direction:column; gap:10px;}
+    /* metode pembayaran */
     .pay-option{
         display:flex; align-items:center; gap:12px;
-        border:1.5px solid var(--mint-deep);
-        border-radius:12px;
-        padding:12px 14px;
-        cursor:pointer;
+        border:2px solid var(--mint-deep); border-radius:14px;
+        padding:14px 16px; margin-bottom:10px; cursor:pointer;
         transition:border-color .15s, background .15s;
     }
     .pay-option:has(input:checked){border-color:var(--spring); background:var(--mint);}
-    .pay-option input{width:16px; height:16px; accent-color:var(--spring);}
-    .pay-option .pay-label{font-size:13px; font-weight:600;}
-    .pay-option .pay-desc{font-size:11.5px; color:var(--muted); margin-top:1px;}
+    .pay-option input{width:18px; height:18px; accent-color:var(--spring); flex-shrink:0;}
+    .pay-option .pay-icon{width:36px; height:36px; border-radius:10px; background:var(--mint); color:var(--spring-deep); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+    .pay-option .pay-icon svg{width:18px; height:18px;}
+    .pay-option .pay-info span{display:block; font-size:13.5px; font-weight:700;}
+    .pay-option .pay-info small{font-size:11.5px; color:var(--muted);}
 
-    textarea, input[type="file"]{
-        width:100%;
-        border:1.5px solid var(--mint-deep);
-        border-radius:12px;
-        padding:11px 13px;
-        font-size:13px;
-        font-family:inherit;
-        color:var(--ink);
-        background:var(--white);
-    }
-    textarea{resize:vertical; min-height:70px;}
-    label.field-label{font-size:12.5px; font-weight:700; margin-bottom:6px; display:block;}
-    .field-hint{font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.5;}
-    .field-error{font-size:11.5px; color:var(--error); margin-top:5px;}
-
-    .warn-box{
+    /* upload resep */
+    .resep-alert{
+        display:flex; align-items:flex-start; gap:10px;
         background:#FCF1DF; border:1px solid #F0DBB0; color:#8A5E15;
-        border-radius:12px; padding:12px 14px; font-size:12.5px; line-height:1.5; margin-bottom:14px;
-        display:flex; gap:9px; align-items:flex-start;
+        border-radius:14px; padding:13px 16px; margin-bottom:14px;
     }
-    .warn-box svg{width:17px; height:17px; flex-shrink:0; margin-top:1px;}
+    .resep-alert svg{width:19px; height:19px; flex-shrink:0; margin-top:1px;}
+    .resep-alert .body{font-size:12.5px; line-height:1.5;}
+    .resep-alert .body b{display:block; font-size:13px; margin-bottom:2px;}
 
-    .checkout-footer{
+    .upload-box{
+        border:2px dashed var(--mint-deep);
+        border-radius:16px;
+        padding:24px 16px;
+        text-align:center;
+        cursor:pointer;
+        transition:border-color .15s, background .15s;
+        position:relative;
+    }
+    .upload-box:hover{border-color:var(--spring); background:var(--mint);}
+    .upload-box.has-file{border-color:var(--spring); border-style:solid; background:var(--mint);}
+    .upload-box svg{width:30px; height:30px; color:var(--spring); margin-bottom:8px;}
+    .upload-box .upload-text{font-size:13px; font-weight:600;}
+    .upload-box .upload-hint{font-size:11.5px; color:var(--muted); margin-top:4px;}
+    .upload-box input[type="file"]{position:absolute; inset:0; opacity:0; cursor:pointer;}
+    .upload-filename{font-size:12.5px; font-weight:700; color:var(--spring-deep); margin-top:10px; word-break:break-all;}
+
+    /* catatan */
+    textarea{
+        width:100%; border:2px solid var(--mint-deep); border-radius:14px;
+        padding:12px 14px; font-family:inherit; font-size:13px; resize:vertical; min-height:70px;
+        outline:none; transition:border-color .15s;
+    }
+    textarea:focus{border-color:var(--spring);}
+
+    /* ringkasan biaya */
+    .summary-row{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); padding:5px 0;}
+    .summary-row.total{font-family:'Outfit', sans-serif; font-weight:700; font-size:15px; color:var(--ink); border-top:1px dashed var(--mint-deep); margin-top:8px; padding-top:12px;}
+
+    /* footer sticky */
+    .co-footer{
         position:fixed; bottom:0; left:0; right:0;
         background:var(--white); border-top:1px solid var(--mint-deep);
         padding:14px 20px; display:flex; align-items:center; justify-content:space-between;
@@ -108,16 +125,17 @@
     .footer-total .label{font-size:11.5px; color:var(--muted);}
     .footer-total .value{font-family:'Outfit', sans-serif; font-weight:800; font-size:17px; color:var(--spring-deep);}
 
-    .beli-btn{
+    .submit-btn{
         background:var(--spring); color:var(--white); border:none;
-        padding:13px 34px; border-radius:14px; font-family:'Outfit', sans-serif;
+        padding:13px 30px; border-radius:14px; font-family:'Outfit', sans-serif;
         font-weight:700; font-size:14px; cursor:pointer; transition:background .15s;
     }
-    .beli-btn:hover{background:var(--spring-deep);}
+    .submit-btn:hover{background:var(--spring-deep);}
+    .submit-btn:disabled{background:var(--mint-deep); color:var(--muted); cursor:not-allowed;}
 
     @media (max-width:480px){
-        .navbar-inner{padding:12px 16px;}
-        .alert, .section{margin-left:10px; margin-right:10px;}
+        .card{padding:16px 18px;}
+        .page-wrap{padding:16px 16px 40px;}
     }
 </style>
 </head>
@@ -134,132 +152,175 @@
 
 <div class="page-wrap">
 
-    @if ($errors->any())
-        <div class="alert alert-error">
-            <b style="display:block; margin-bottom:4px;">Periksa kembali data checkout kamu:</b>
-            @foreach ($errors->all() as $error)
-                {{ $error }}@if(!$loop->last)<br>@endif
-            @endforeach
-        </div>
+    @if (session('success'))
+        <div class="flash-success">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="flash-error">{{ session('error') }}</div>
     @endif
 
-    <form method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" id="checkoutForm">
         @csrf
 
-        {{-- ===== ALAMAT ===== --}}
-        <div class="section">
-            <div class="section-title">
+        {{-- ===== ALAMAT PENGIRIMAN ===== --}}
+        <div class="card">
+            <div class="card-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                 Alamat Pengiriman
             </div>
-            <div class="addr-block">
-                <b>{{ $user->nama_penerima ?? $user->name }} @if($user->no_telepon) &middot; {{ $user->no_telepon }} @endif</b>
-                {{ $user->alamat }}
-                <div class="muted" style="margin-top:6px;">
-                    Jarak {{ number_format($summary['jarak_km'], 1) }} km dari apotek &middot; Ongkir Rp{{ number_format($summary['ongkir'], 0, ',', '.') }}
-                </div>
+            <div class="addr-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <p>
+                    <b>{{ $user->name }}</b>
+                    {{ $user->alamat }}
+                </p>
             </div>
+            <a href="{{ route('alamat.create') }}" class="addr-change">Ubah Alamat</a>
         </div>
 
-        {{-- ===== ITEM ===== --}}
-        <div class="section">
-            <div class="section-title">
+        {{-- ===== PRODUK DIPESAN ===== --}}
+        <div class="card">
+            <div class="card-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.6a2 2 0 0 0 2-1.6L23 6H6"/></svg>
-                Ringkasan Produk ({{ $summary['item_count'] }})
+                Produk Dipesan ({{ $cartItems->count() }})
             </div>
             @foreach ($cartItems as $item)
-                <div class="item-row">
+                <div class="co-item">
                     <div>
-                        <div class="item-name">
-                            {{ $item->obat->nama }}
-                            @if($item->obat->butuh_resep)<span class="badge-resep">Resep</span>@endif
-                            @if($item->obat->butuh_ktp)<span class="badge-resep">KTP</span>@endif
-                        </div>
-                        <div class="item-qty">{{ $item->quantity }} x Rp{{ number_format($item->obat->harga, 0, ',', '.') }}</div>
+                        <div class="name">{{ $item->obat->nama }}</div>
+                        <div class="qty">{{ $item->quantity }} x Rp{{ number_format($item->obat->harga, 0, ',', '.') }}</div>
                     </div>
-                    <div class="item-price">Rp{{ number_format($item->quantity * $item->obat->harga, 0, ',', '.') }}</div>
+                    <div class="price">Rp{{ number_format($item->obat->harga * $item->quantity, 0, ',', '.') }}</div>
                 </div>
             @endforeach
-
-            <div style="margin-top:12px;">
-                <div class="summary-row"><span>Subtotal</span><span>Rp{{ number_format($summary['subtotal'], 0, ',', '.') }}</span></div>
-                <div class="summary-row"><span>Ongkos Kirim</span><span>Rp{{ number_format($summary['ongkir'], 0, ',', '.') }}</span></div>
-                <div class="summary-row total"><span>Total</span><span>Rp{{ number_format($summary['total'], 0, ',', '.') }}</span></div>
-            </div>
         </div>
 
-        {{-- ===== VERIFIKASI RESEP / KTP ===== --}}
-        @if($butuhResep || $butuhKtp)
-            <div class="section">
-                <div class="section-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-                    Verifikasi Dokumen
+        {{-- ===== METODE PEMBAYARAN ===== --}}
+        <div class="card">
+            <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                Metode Pembayaran
+            </div>
+
+            <label class="pay-option">
+                <input type="radio" name="metode_pembayaran" value="cod" checked>
+                <div class="pay-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
                 </div>
-                <div class="warn-box">
+                <div class="pay-info">
+                    <span>COD (Bayar di Tempat)</span>
+                    <small>Bayar tunai saat pesanan tiba</small>
+                </div>
+            </label>
+
+            <label class="pay-option">
+                <input type="radio" name="metode_pembayaran" value="qris">
+                <div class="pay-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                </div>
+                <div class="pay-info">
+                    <span>Transfer QRIS (BSI)</span>
+                    <small>Bayar via scan QRIS</small>
+                </div>
+            </label>
+
+            @error('metode_pembayaran')<div class="flash-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+        </div>
+
+        {{-- ===== UPLOAD RESEP (kondisional) ===== --}}
+        @if($requiresResep)
+            <div class="card">
+                <div class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6M9 16h6M9 8h2"/><rect x="5" y="3" width="14" height="18" rx="2"/></svg>
+                    Resep Dokter
+                </div>
+
+                <div class="resep-alert">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="m10.29 3.86-8.18 14.18A2 2 0 0 0 3.93 21h16.14a2 2 0 0 0 1.82-2.96L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
-                    <div>Ada produk di keranjang kamu yang butuh verifikasi sebelum pesanan diproses apoteker. Pesanan tetap tersimpan, tapi statusnya "menunggu verifikasi" sampai dokumen dicek.</div>
+                    <div class="body">
+                        <b>Wajib diunggah</b>
+                        Pesananmu mengandung: {{ $kerasItems->pluck('obat.nama')->implode(', ') }}. Apoteker kami akan memverifikasi resep ini sebelum pesanan diproses.
+                    </div>
                 </div>
 
-                @if($butuhResep)
-                    <div style="margin-bottom:14px;">
-                        <label class="field-label" for="resep">Foto Resep Dokter</label>
-                        <input type="file" name="resep" id="resep" accept=".jpg,.jpeg,.png,.pdf" required>
-                        <div class="field-hint">Format JPG, PNG, atau PDF, maksimal 10MB.</div>
-                    </div>
-                @endif
+                <label class="upload-box" id="uploadBox">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14M6 9l6-6 6 6"/><path d="M4 21h16"/></svg>
+                    <div class="upload-text">Klik untuk pilih foto resep</div>
+                    <div class="upload-hint">JPG, PNG, atau PDF — maks 10MB</div>
+                    <input type="file" name="resep" id="resepInput" accept=".jpg,.jpeg,.png,.pdf" required>
+                </label>
+                <div class="upload-filename" id="uploadFilename"></div>
 
-                @if($butuhKtp)
-                    <div>
-                        <label class="field-label" for="ktp">Foto KTP</label>
-                        <input type="file" name="ktp" id="ktp" accept=".jpg,.jpeg,.png,.pdf" required>
-                        <div class="field-hint">Dipakai apoteker untuk verifikasi usia/identitas, format JPG, PNG, atau PDF, maksimal 10MB.</div>
-                    </div>
-                @endif
+                @error('resep')<div class="flash-error" style="margin-top:10px;">{{ $message }}</div>@enderror
             </div>
         @endif
 
-        {{-- ===== METODE PEMBAYARAN ===== --}}
-        <div class="section">
-            <div class="section-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-                Metode Pembayaran
-            </div>
-            <div class="pay-options">
-                <label class="pay-option">
-                    <input type="radio" name="metode_pembayaran" value="cod" checked>
-                    <div>
-                        <div class="pay-label">COD (Bayar di Tempat)</div>
-                        <div class="pay-desc">Bayar tunai langsung ke kurir saat pesanan tiba.</div>
-                    </div>
-                </label>
-                <label class="pay-option">
-                    <input type="radio" name="metode_pembayaran" value="qris">
-                    <div>
-                        <div class="pay-label">Transfer QRIS (BSI)</div>
-                        <div class="pay-desc">Transfer sebelum pesanan diproses.</div>
-                    </div>
-                </label>
-            </div>
-        </div>
-
         {{-- ===== CATATAN ===== --}}
-        <div class="section">
-            <div class="section-title">
+        <div class="card">
+            <div class="card-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05 12.25 20.24a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.67 3.67 0 0 1 5.19 5.19L9.66 17.65a1.83 1.83 0 0 1-2.6-2.6l8.49-8.49"/></svg>
-                Catatan Tambahan (opsional)
+                Catatan (opsional)
             </div>
-            <textarea name="catatan" placeholder="Contoh: tolong hubungi dulu sebelum diantar.">{{ old('catatan') }}</textarea>
+            <textarea name="catatan" placeholder="Contoh: tolong titip di satpam, atau info tambahan lainnya" maxlength="1000"></textarea>
         </div>
 
-        <div class="checkout-footer">
+        {{-- ===== RINCIAN BIAYA ===== --}}
+        <div class="card">
+            <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Rincian Biaya
+            </div>
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>Rp{{ number_format($summary['subtotal'], 0, ',', '.') }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Ongkos Kirim {{ $summary['jarak_km'] ? '('.number_format($summary['jarak_km'], 1).' km)' : '' }}</span>
+                <span>Rp{{ number_format($summary['ongkir'], 0, ',', '.') }}</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total Pembayaran</span>
+                <span>Rp{{ number_format($summary['total'], 0, ',', '.') }}</span>
+            </div>
+        </div>
+
+        <div class="co-footer">
             <div class="footer-total">
-                <span class="label">Total Bayar</span>
+                <span class="label">Total Pembayaran</span>
                 <span class="value">Rp{{ number_format($summary['total'], 0, ',', '.') }}</span>
             </div>
-            <button type="submit" class="beli-btn">Buat Pesanan</button>
+            <button type="submit" class="submit-btn" id="submitBtn">Buat Pesanan</button>
         </div>
+
     </form>
 </div>
+
+<script>
+(function(){
+    const resepInput = document.getElementById('resepInput');
+    const uploadBox = document.getElementById('uploadBox');
+    const uploadFilename = document.getElementById('uploadFilename');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('checkoutForm');
+
+    if(resepInput){
+        resepInput.addEventListener('change', () => {
+            if(resepInput.files.length > 0){
+                uploadBox.classList.add('has-file');
+                uploadFilename.textContent = '📎 ' + resepInput.files[0].name;
+            } else {
+                uploadBox.classList.remove('has-file');
+                uploadFilename.textContent = '';
+            }
+        });
+    }
+
+    form.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Memproses...';
+    });
+})();
+</script>
 
 </body>
 </html>

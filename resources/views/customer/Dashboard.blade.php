@@ -41,147 +41,6 @@
     a{text-decoration:none; color:inherit;}
     button{font-family:inherit;}
 
-    /* ===== NAVBAR ===== */
-    .navbar{
-        position:sticky;
-        top:0;
-        z-index:50;
-        background:var(--white);
-        border-bottom:1px solid var(--mint-deep);
-    }
-
-    .navbar-inner{
-        max-width:1240px;
-        margin:0 auto;
-        padding:14px 28px;
-        display:flex;
-        align-items:center;
-        gap:28px;
-    }
-
-    .nav-brand{
-        display:flex;
-        align-items:center;
-        gap:10px;
-        flex-shrink:0;
-    }
-
-    .nav-brand .logo-box{
-        width:42px; height:42px;
-        border-radius:12px;
-        background:var(--mint);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:6px;
-        flex-shrink:0;
-    }
-
-    .nav-brand .logo-box img{width:100%; height:100%; object-fit:contain;}
-
-    .nav-brand .brand-text{
-        font-family:'Outfit', sans-serif;
-        font-weight:800;
-        font-size:17px;
-        line-height:1.15;
-        color:var(--ink);
-    }
-
-    .nav-brand .brand-text span{
-        display:block;
-        font-family:'Inter', sans-serif;
-        font-weight:500;
-        font-size:10.5px;
-        color:var(--muted);
-        letter-spacing:.02em;
-    }
-
-    .nav-links{
-        display:flex;
-        align-items:center;
-        gap:4px;
-        flex:1;
-    }
-
-    .nav-links a{
-        font-size:13.5px;
-        font-weight:600;
-        color:var(--muted);
-        padding:9px 15px;
-        border-radius:999px;
-        transition:background .15s, color .15s;
-        white-space:nowrap;
-    }
-
-    .nav-links a:hover{background:var(--mint); color:var(--ink);}
-    .nav-links a.active{background:var(--spring); color:var(--white);}
-
-    .nav-actions{
-        display:flex;
-        align-items:center;
-        gap:10px;
-        flex-shrink:0;
-    }
-
-    .icon-btn{
-        width:40px; height:40px;
-        border-radius:12px;
-        border:none;
-        background:var(--mint);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        cursor:pointer;
-        color:var(--spring-deep);
-        position:relative;
-        transition:background .15s;
-    }
-    .icon-btn:hover{background:var(--mint-deep);}
-    .icon-btn svg{width:19px; height:19px;}
-
-    .cart-count{
-        position:absolute;
-        top:-4px; right:-4px;
-        background:var(--error);
-        color:var(--white);
-        font-size:10px;
-        font-weight:700;
-        width:17px; height:17px;
-        border-radius:50%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        border:2px solid var(--white);
-    }
-
-    .avatar-btn{
-    width:40px; height:40px;
-    border-radius:50%;
-    background:var(--spring);
-    color:var(--white);
-    border:none;
-    font-family:'Outfit', sans-serif;
-    font-weight:700;
-    font-size:14px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-decoration:none;
-    }
-
-    .nav-toggle{
-        display:none;
-        width:40px; height:40px;
-        border-radius:12px;
-        border:none;
-        background:var(--mint);
-        align-items:center;
-        justify-content:center;
-        cursor:pointer;
-    }
-    .nav-toggle svg{width:20px; height:20px; color:var(--ink);}
-
     /* ===== HERO / SEARCH ===== */
     .hero{
         max-width:1240px;
@@ -202,19 +61,44 @@
         flex-direction:column;
         justify-content:center;
         position:relative;
+        overflow:hidden;
+    }
+
+    .hero-left-content{
+        position:relative;
+        z-index:1;
     }
 
     .hero-bottle-deco{
         position:absolute;
-        left:-64px;
-        top:50%;
-        width:52px;
-        height:auto;
+        z-index:0;
+        pointer-events:none;
         object-fit:contain;
-        filter:drop-shadow(0 10px 14px rgba(29,43,38,0.16));
-        display:none;
-        animation:heroBottleFloat 3.6s ease-in-out infinite;
-        transform-origin:center;
+    }
+
+    @media (min-width:1080px){
+        .hero-bottle-deco{
+            display:block;
+            left:-76px;
+            top:50%;
+            width:66px;
+            filter:drop-shadow(0 10px 14px rgba(29,43,38,0.16));
+            animation:heroBottleFloat 3.6s ease-in-out infinite;
+            opacity:1;
+        }
+    }
+
+    @media (max-width:1079px){
+        .hero-bottle-deco{
+            display:block;
+            right:-24px;
+            top:50%;
+            transform:translateY(-50%) rotate(-14deg);
+            width:190px;
+            opacity:.16;
+            filter:none;
+            animation:heroBottleFloatSlow 6s ease-in-out infinite;
+        }
     }
 
     @keyframes heroBottleFloat{
@@ -222,8 +106,9 @@
         50%{transform:translateY(-58%) rotate(-3deg);}
     }
 
-    @media (min-width:1080px){
-        .hero-bottle-deco{display:block;}
+    @keyframes heroBottleFloatSlow{
+        0%,100%{transform:translateY(-50%) rotate(-14deg);}
+        50%{transform:translateY(-54%) rotate(-9deg);}
     }
 
     .hero-greeting{
@@ -290,7 +175,6 @@
     }
     .search-shell .search-submit:hover{background:var(--spring-deep);}
 
-    /* ===== HERO VISUAL (dua kartu promo, kanan) ===== */
     .hero-visual-frame{
         flex:1 1 420px;
         background:var(--mint-deep);
@@ -300,27 +184,30 @@
     }
 
     .hero-visual{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:14px;
-        height:100%;
+        display:flex;
+        overflow-x:auto;
+        scroll-snap-type:x mandatory;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+        border-radius:18px;
     }
+    .hero-visual::-webkit-scrollbar{display:none;}
 
     .hero-promo-card{
         position:relative;
+        flex:0 0 100%;
+        scroll-snap-align:start;
         border-radius:18px;
         overflow:hidden;
-        min-height:240px;
+        min-height:280px;
         background:var(--white);
         cursor:pointer;
         border:none;
         padding:0;
         text-align:left;
-        display:block;
-        width:100%;
         font-family:inherit;
         animation:heroCardIn .55s ease both;
-        transition:transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease;
+        transition:box-shadow .28s ease;
     }
     .hero-promo-card:nth-child(2){animation-delay:.09s;}
 
@@ -331,7 +218,6 @@
 
     .hero-promo-card:hover,
     .hero-promo-card:focus-visible{
-        transform:translateY(-5px);
         box-shadow:0 18px 32px -14px rgba(12,45,33,0.32);
         outline:none;
     }
@@ -351,7 +237,7 @@
         transition:transform .55s cubic-bezier(.2,.8,.2,1);
     }
 
-    .hero-promo-card:hover img{transform:scale(1.09);}
+    .hero-promo-card:hover img{transform:scale(1.07);}
 
     .hero-promo-card::after{
         content:'';
@@ -385,7 +271,7 @@
         position:absolute;
         right:12px; bottom:12px;
         z-index:3;
-        width:32px; height:32px;
+        width:34px; height:34px;
         border-radius:50%;
         background:var(--white);
         color:var(--ink);
@@ -407,7 +293,7 @@
 
     .hero-promo-text{
         position:absolute;
-        left:14px; right:44px; bottom:14px;
+        left:16px; right:48px; bottom:16px;
         z-index:2;
         color:var(--white);
     }
@@ -416,38 +302,53 @@
         display:block;
         font-family:'Outfit', sans-serif;
         font-weight:700;
-        font-size:13.5px;
+        font-size:15px;
         line-height:1.25;
     }
 
     .hero-promo-text small{
         display:block;
-        font-size:11px;
+        font-size:11.5px;
         font-weight:500;
         opacity:.9;
-        margin-top:2px;
+        margin-top:3px;
     }
 
-    /* dot indicators, hanya tampil saat mode carousel di layar kecil */
     .hero-visual-dots{
-        display:none;
+        display:flex;
+        align-items:center;
         justify-content:center;
-        gap:6px;
-        margin-top:10px;
+        gap:8px;
+        margin-top:12px;
     }
 
     .hero-dot{
-        width:6px; height:6px;
+        position:relative;
+        width:22px; height:5px;
         border-radius:999px;
         background:var(--white);
-        opacity:.6;
         cursor:pointer;
-        transition:width .25s ease, opacity .25s ease, background .25s ease;
+        overflow:hidden;
+        transition:background .2s ease;
     }
-    .hero-dot.active{
-        width:18px;
-        opacity:1;
+
+    .hero-dot .hero-dot-fill{
+        position:absolute;
+        inset:0;
+        width:0%;
         background:var(--spring-deep);
+        border-radius:999px;
+    }
+
+    .hero-dot.active .hero-dot-fill{
+        animation:heroDotProgress 4.2s linear forwards;
+    }
+
+    .hero-dot.visited .hero-dot-fill{width:100%;}
+
+    @keyframes heroDotProgress{
+        from{width:0%;}
+        to{width:100%;}
     }
 
     @media (max-width:860px){
@@ -455,26 +356,11 @@
     }
 
     @media (max-width:640px){
-        .hero-visual{
-            display:flex;
-            grid-template-columns:unset;
-            overflow-x:auto;
-            scroll-snap-type:x mandatory;
-            -webkit-overflow-scrolling:touch;
-            gap:12px;
-            scrollbar-width:none;
-        }
-        .hero-visual::-webkit-scrollbar{display:none;}
-        .hero-promo-card{
-            flex:0 0 84%;
-            scroll-snap-align:center;
-            min-height:190px;
-        }
-        .hero-visual-frame{padding:10px 10px 6px;}
-        .hero-visual-dots{display:flex;}
+        .hero-promo-card{min-height:200px;}
+        .hero-visual-frame{padding:10px 10px 8px;}
+        .hero-promo-text span{font-size:13.5px;}
     }
 
-    /* ===== CATEGORY BLISTER STRIP ===== */
     .cat-section{
         max-width:1240px;
         margin:0 auto;
@@ -582,7 +468,6 @@
     }
     .cat-pill.active span.label{color:var(--ink); font-weight:700;}
 
-    /* ===== PRODUCTS ===== */
     .products-section{
         max-width:1240px;
         margin:0 auto;
@@ -634,12 +519,13 @@
     }
 
     .product-thumb{
-        aspect-ratio:1/0.85;
+        aspect-ratio:1/1;
         background:linear-gradient(150deg, var(--mint) 0%, var(--mint-deep) 100%);
         display:flex;
         align-items:center;
         justify-content:center;
         position:relative;
+        padding:14px;
     }
 
     .product-thumb svg{width:46px; height:46px; color:var(--spring); opacity:.55;}
@@ -746,7 +632,6 @@
     .empty-state h3{font-family:'Outfit', sans-serif; color:var(--ink); font-size:15px;}
     .empty-state p{font-size:12.5px; max-width:280px;}
 
-    /* ===== AGE-RESTRICTED PRODUCT LOCK ===== */
     .product-card.locked .product-thumb{
         background:linear-gradient(150deg, #E8E4E6 0%, #D9D2D6 100%);
         filter:blur(0px);
@@ -797,7 +682,6 @@
 
     .cat-pill.restricted .bump{background:#EFE9EC;}
 
-    /* ===== AGE VERIFICATION MODAL ===== */
     .age-modal-backdrop{
         display:none;
         position:fixed;
@@ -874,7 +758,6 @@
     .age-modal-btn.primary{background:var(--spring); color:var(--white);}
     .age-modal-btn.primary:hover{background:var(--spring-deep);}
 
-    /* ===== PROMO STRIP (upload resep) ===== */
     .promo-banner{
         max-width:1240px;
         margin:26px auto 0;
@@ -924,27 +807,7 @@
     .promo-btn:hover{transform:translateY(-2px);}
     .promo-btn svg{width:16px; height:16px;}
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width:920px){
-        .nav-links{
-            position:fixed;
-            top:70px; left:0; right:0;
-            background:var(--white);
-            flex-direction:column;
-            align-items:stretch;
-            padding:10px 16px 16px;
-            gap:2px;
-            border-bottom:1px solid var(--mint-deep);
-            box-shadow:var(--shadow-sm);
-            display:none;
-        }
-        .nav-links.open{display:flex;}
-        .nav-links a{padding:12px 14px;}
-        .nav-toggle{display:flex;}
-    }
-
     @media (max-width:560px){
-        .navbar-inner{padding:12px 18px;}
         .hero{padding:26px 18px 6px;}
         .cat-section{padding:22px 18px 4px;}
         .products-section{padding:24px 18px 50px;}
@@ -957,98 +820,51 @@
 <body>
 
 @php
-    /*
-        DATA DUMMY — hapus blok ini setelah Controller mengirim data asli.
-        Struktur field mengikuti kolom yang disarankan untuk tabel products:
-        id, name, category (slug), description, price, stock, image_url.
-        Controller nantinya cukup: return view('customer.dashboard', compact('products', 'categories'));
-    */
-    $categories = $categories ?? [
-        ['slug' => 'obat',       'label' => 'Obat',            'color' => '#12A874', 'icon' => 'pill'],
-        ['slug' => 'nutrisi',    'label' => 'Nutrisi',         'color' => '#E8A33D', 'icon' => 'leaf-drop'],
-        ['slug' => 'suplemen',   'label' => 'Suplemen',        'color' => '#8C7AE6', 'icon' => 'layers'],
-        ['slug' => 'bayi',       'label' => 'Produk Bayi',     'color' => '#4E9BD9', 'icon' => 'baby'],
-        ['slug' => 'herbal',     'label' => 'Herbal',          'color' => '#6FA83C', 'icon' => 'leaf'],
-        ['slug' => 'alkes',      'label' => 'Alat Kesehatan',  'color' => '#E0715B', 'icon' => 'pulse'],
-        ['slug' => 'mata',       'label' => 'Mata',            'color' => '#2FA5A0', 'icon' => 'eye'],
-        ['slug' => 'kecantikan', 'label' => 'Kecantikan',      'color' => '#D9679C', 'icon' => 'sparkle'],
-        ['slug' => 'dewasa',     'label' => 'Produk Dewasa',   'color' => '#5B4B57', 'icon' => 'lock', 'restricted' => true, 'min_age' => 21],
-    ];
-
-    // Umur pelanggan dihitung Controller dari kolom birth_date (lihat CustomerDashboardController).
-    // null artinya umur belum bisa dipastikan -> dianggap belum terverifikasi (aman secara default).
     $userAge = $userAge ?? null;
 
-    // Legenda logo golongan obat resmi (merah = Obat Keras, biru = Obat Bebas Terbatas, hijau = Obat Bebas).
-    // File logo ditaruh di public/assets/images/. obat_keras.png tetap pakai foto asli/asset resmi kamu.
-    // obat_bebas.svg (hijau) dan obat_bebas_terbatas.svg (biru) sudah dibuatkan — tinggal taruh di folder yang sama.
     $drugClasses = [
-        'keras'    => ['label' => 'Obat Keras',          'file' => 'obat_keras.png',            'requires_resep' => true],
-        'terbatas' => ['label' => 'Obat Bebas Terbatas',  'file' => 'obat_bebas_terbatas.svg',   'requires_resep' => false],
-        'bebas'    => ['label' => 'Obat Bebas',           'file' => 'obat_bebas.svg',             'requires_resep' => false],
+        'keras'    => ['label' => 'Obat Keras',          'file' => 'obat_keras.png',           'requires_resep' => true],
+        'terbatas' => ['label' => 'Obat Bebas Terbatas',  'file' => 'obat_bebas_terbatas.png',  'requires_resep' => false],
+        'bebas'    => ['label' => 'Obat Bebas',           'file' => 'obat_bebas.png',            'requires_resep' => false],
     ];
 
-    // $products WAJIB dikirim dari Controller (Product::all() dari database).
-    // Tidak ada lagi data dummy di sini — kalau $products kosong berarti tabel products
-    // di database kamu belum diisi (jalankan: php artisan db:seed --class=ProductSeeder).
     $products = $products ?? collect();
 
     $icons = [
-        'pill' => '<path d="M4.93 4.93a6 6 0 0 1 8.49 0l5.66 5.66a6 6 0 1 1-8.49 8.49L4.93 13.4a6 6 0 0 1 0-8.49Z"/><path d="M9.5 9.5l5 5"/>',
-        'leaf-drop' => '<path d="M12 2C8 6 6 10 6 13.5A6 6 0 0 0 18 13.5C18 10 16 6 12 2Z"/>',
-        'layers' => '<path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M2 13l10 5 10-5"/><path d="M2 18l10 5 10-5"/>',
-        'baby' => '<circle cx="12" cy="7" r="4"/><path d="M6 21c0-4.5 2.7-7 6-7s6 2.5 6 7"/><path d="M9 7c.5 1 1.5 1.5 3 1.5S14.5 8 15 7"/>',
-        'leaf' => '<path d="M4 20c8 0 16-6 16-16C10 4 4 12 4 20Z"/><path d="M4 20c3-5 6-8 12-11"/>',
-        'pulse' => '<path d="M3 12h4l2-7 4 14 2-7h6"/>',
-        'eye' => '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>',
-        'sparkle' => '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/><circle cx="12" cy="12" r="2.2"/>',
-        'lock' => '<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
-    ];
+    'pill' => '<path d="M4.93 4.93a6 6 0 0 1 8.49 0l5.66 5.66a6 6 0 1 1-8.49 8.49L4.93 13.4a6 6 0 0 1 0-8.49Z"/><path d="M9.5 9.5l5 5"/>',
+    'leaf-drop' => '<path d="M12 2C8 6 6 10 6 13.5A6 6 0 0 0 18 13.5C18 10 16 6 12 2Z"/>',
+    'layers' => '<rect x="7" y="7" width="10" height="13" rx="2"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/><path d="M9 12h6M9 15h6"/>',
+    'baby' => '<path d="M9 3h6l-1 3H10L9 3Z"/><path d="M8 8h8l-1 11a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2L8 8Z"/><path d="M8 12h8"/>',
+    'leaf' => '<path d="M4 20c8 0 16-6 16-16C10 4 4 12 4 20Z"/><path d="M4 20c3-5 6-8 12-11"/>',
+    'pulse' => '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="12" r="2"/>',
+    'eye' => '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>',
+    'sparkle' => '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/><circle cx="12" cy="12" r="2.2"/>',
+    'lock' => '<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+    'droplet' => '<path d="M12 2c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z"/>',
+    'tooth' => '<path d="M12 3c-2 0-3 1-4 1s-2-1-3-1c-2 0-3 2-3 4.5 0 3 1 6 2 9 .5 1.5 1 2.5 2 2.5s1.5-2 2-4 1-3 2-3 1.5 1 2 3 1 4 2 4 1.5-1 2-2.5c1-3 2-6 2-9 0-2.5-1-4.5-3-4.5-1 0-2 1-3 1s-2-1-4-1Z"/>',
+    'medkit' => '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M12 11v6M9 14h6"/>',
+    'mask' => '<path d="M3 10c0-2 2-3 4-3h10c2 0 4 1 4 3v3c0 3-4 5-9 5s-9-2-9-5v-3Z"/><path d="M3 11h18M3 13h18"/><path d="M3 10 1 8M21 10l2-2"/>',
+    'flu' => '<path d="M12 14.76V4a2 2 0 0 0-4 0v10.76a4 4 0 1 0 4 0Z"/><path d="M12 8h-2"/>',
+    'stomach' => '<path d="M12 21a8 8 0 1 1 0-16 6 6 0 1 1 0 12 4 4 0 1 1 0-8 2 2 0 1 1 0 4"/>',
+    'hair' => '<path d="M4 21c0-6 2-9 2-13a6 6 0 0 1 12 0c0 4 2 7 2 13"/><path d="M8 21V10M12 21V8M16 21V10"/>',
+];
 @endphp
 
-<nav class="navbar">
-    <div class="navbar-inner">
-        <a href="{{ route('dashboard') }}" class="nav-brand">
-            <div class="logo-box">
-                <img src="{{ asset('assets/images/logo-apotekrizki.png') }}" alt="Logo Apotek Rizki">
-            </div>
-            <div class="brand-text">Apotek Rizki<span>Layanan obat terpercaya</span></div>
-        </a>
-
-        <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Buka menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-        </button>
-
-        <div class="nav-links" id="navLinks">
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Beranda</a>
-            <a href="{{ route('resep.upload') }}" class="{{ request()->routeIs('resep.*') ? 'active' : '' }}">Upload Resep</a>
-            <a href="{{ route('pesanan.index') }}" class="{{ request()->routeIs('pesanan.*') ? 'active' : '' }}">Pesanan Saya</a>
-        </div>
-
-        <div class="nav-actions">
-            <a href="{{ route('cart.index') }}" class="icon-btn" aria-label="Keranjang">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.6a2 2 0 0 0 2-1.6L23 6H6"/></svg>
-                <span class="cart-count" id="navCartCount">{{ $cartCount ?? 0 }}</span>
-            </a>
-            <a href="{{ route('profile.index') }}" class="avatar-btn" aria-label="Akun saya">
-    {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
-</a>
-        </div>
-    </div>
-</nav>
-
+<x-customer-navbar />
 <header class="hero">
     <div class="hero-top">
         <div class="hero-left">
             <img class="hero-bottle-deco" src="{{ asset('assets/images/hero-bottle.png') }}" alt="">
-            <h1 class="hero-greeting"><span class="wave">👋</span> Halo, Iwani!</h1>
-            <p class="hero-sub">Mau cari obat atau kebutuhan kesehatan apa hari ini?</p>
+            <div class="hero-left-content">
+                <h1 class="hero-greeting"><span class="wave">👋</span> Halo, Iwani!</h1>
+                <p class="hero-sub">Mau cari obat atau kebutuhan kesehatan apa hari ini?</p>
 
-            <form class="search-shell" onsubmit="return false;">
-                <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                <input type="text" id="searchInput" placeholder="Cari obat, vitamin, atau alat kesehatan...">
-                <button type="submit" class="search-submit">Cari</button>
-            </form>
+                <form class="search-shell" onsubmit="return false;">
+                    <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="searchInput" placeholder="Cari obat, vitamin, atau alat kesehatan...">
+                    <button type="submit" class="search-submit">Cari</button>
+                </form>
+            </div>
         </div>
 
         <div class="hero-visual-frame">
@@ -1075,15 +891,28 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
                     </span>
                 </button>
+                <button type="button" class="hero-promo-card" data-cat="bayi" aria-label="Lihat produk ibu dan bayi">
+                    <div class="promo-img-wrap">
+                        <img src="{{ asset('assets/images/promo-ibu-bayi.png') }}" alt="Fokus Perlindungan dan Kesehatan Ibu dan Bayi">
+                    </div>
+                    <span class="promo-badge" style="--badge-fg:#4E9BD9;">Fokus Perlindungan &amp; Kesehatan</span>
+                    <div class="hero-promo-text">
+                        <span>Memberikan Perlindungan Terbaik</span>
+                        <small>Sejak Hari Pertama</small>
+                    </div>
+                    <span class="promo-cta">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+                    </span>
+                </button>
             </div>
             <div class="hero-visual-dots" id="heroDots">
-                <span class="hero-dot active" data-index="0"></span>
-                <span class="hero-dot" data-index="1"></span>
+                <span class="hero-dot active" data-index="0"><span class="hero-dot-fill"></span></span>
+                <span class="hero-dot" data-index="1"><span class="hero-dot-fill"></span></span>
+                <span class="hero-dot" data-index="2"><span class="hero-dot-fill"></span></span>
             </div>
         </div>
     </div>
 </header>
-
 <section class="cat-section">
     <div class="cat-heading">
         <h2>Kategori</h2>
@@ -1155,6 +984,7 @@
                  data-name="{{ strtolower($p->name) }}"
                  data-locked="{{ $isLocked ? '1' : '0' }}"
                  data-min-age="{{ $minAge ?? 0 }}"
+                 data-product-id="{{ $p->id }}"
                  data-requires-resep="{{ ($requiresResep && !$isLocked) ? '1' : '0' }}">
                 <div class="product-thumb">
                     @if($isLocked)
@@ -1168,15 +998,15 @@
                     @endif
 
                     @if($isLocked)
-        <div class="lock-overlay">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-            <span>Verifikasi usia {{ $minAge }}+</span>
-        </div>
-    @elseif($p->image)
-        <img src="{{ Storage::url($p->image) }}" alt="{{ $p->name }}" style="width:100%; height:100%; object-fit:cover;">
-    @else
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.93 4.93a6 6 0 0 1 8.49 0l5.66 5.66a6 6 0 1 1-8.49 8.49L4.93 13.4a6 6 0 0 1 0-8.49Z"/><path d="M9.5 9.5l5 5"/></svg>
-    @endif
+                        <div class="lock-overlay">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                            <span>Verifikasi usia {{ $minAge }}+</span>
+                        </div>
+                    @elseif($p->image)
+                        <img src="{{ Storage::url($p->image) }}" alt="{{ $p->name }}" style="width:100%; height:100%; object-fit:contain; background:#fff; border-radius:12px;">
+                    @else
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.93 4.93a6 6 0 0 1 8.49 0l5.66 5.66a6 6 0 1 1-8.49 8.49L4.93 13.4a6 6 0 0 1 0-8.49Z"/><path d="M9.5 9.5l5 5"/></svg>
+                    @endif
 
                     @if($drugClassInfo && !$isLocked)
                         <img class="drug-badge" src="{{ asset('assets/images/'.$drugClassInfo['file']) }}" alt="{{ $drugClassInfo['label'] }}" title="{{ $drugClassInfo['label'] }}">
@@ -1197,7 +1027,7 @@
                             </button>
                         @elseif($requiresResep)
                             <button type="button" class="add-btn resep-btn" aria-label="Perlu resep dokter" title="Perlu resep dokter">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6M9 16h6M9 8h2"/><rect x="5" y="3" width="14" height="18" rx="2"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                             </button>
                         @else
                             <button type="button" class="add-btn {{ $stockState === 'out' ? 'disabled' : '' }}" data-product-id="{{ $p->id }}" {{ $stockState === 'out' ? 'disabled' : '' }} aria-label="Tambah ke keranjang">
@@ -1247,7 +1077,6 @@
 
 <script>
 (function(){
-    // Umur pelanggan dikirim dari Controller (dihitung dari birth_date). null = belum terverifikasi.
     const userAge = {{ $userAge !== null ? (int) $userAge : 'null' }};
 
     const catButtons = document.querySelectorAll('.cat-pill');
@@ -1289,7 +1118,7 @@
     ageModal.addEventListener('click', (e) => { if(e.target === ageModal) closeAgeModal(); });
     ageModalProfile.addEventListener('click', () => {
         closeAgeModal();
-        window.location.href = "{{ route('dashboard') }}#profil"; // arahkan ke halaman lengkapi profil kalau sudah ada
+        window.location.href = "{{ route('dashboard') }}#profil";
     });
 
     function applyFilter(){
@@ -1316,7 +1145,7 @@
 
             if(isRestricted && !isAgeVerified(minAge)){
                 openAgeModal(minAge);
-                return; // batal filter, kategori tetap tidak dibuka
+                return;
             }
 
             catButtons.forEach(b => b.classList.remove('active'));
@@ -1327,8 +1156,6 @@
         });
     });
 
-    // Kartu produk yang dibatasi usia: klik dimana pun pada kartu membuka modal verifikasi,
-    // dan TIDAK mengarahkan ke halaman detail produk.
     document.querySelectorAll('.product-card.locked').forEach(card => {
         card.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1337,7 +1164,6 @@
         });
     });
 
-    // Tombol kunci usia di dalam kartu (safety-net kalau ada event lain)
     document.querySelectorAll('.locked-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1347,29 +1173,53 @@
         });
     });
 
-    // ===== Notifikasi "perlu resep dokter" untuk produk golongan Obat Keras =====
-    // Klik kartu Obat Keras membuka modal resep dulu, bukan langsung ke halaman detail.
     const resepModal = document.getElementById('resepModal');
     const resepModalClose = document.getElementById('resepModalClose');
     const resepModalConfirm = document.getElementById('resepModalConfirm');
+    let pendingResepProductId = null;
 
     function openResepModal(){ resepModal.classList.add('open'); }
     function closeResepModal(){ resepModal.classList.remove('open'); }
 
     resepModalClose.addEventListener('click', closeResepModal);
     resepModal.addEventListener('click', (e) => { if(e.target === resepModal) closeResepModal(); });
+
     resepModalConfirm.addEventListener('click', () => {
-        window.location.href = resepModalConfirm.dataset.pesananUrl || '#';
+        const productId = pendingResepProductId;
+        closeResepModal();
+
+        if (!productId) {
+            window.location.href = "{{ route('cart.index') }}";
+            return;
+        }
+
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(`/keranjang/tambah/${productId}`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+        })
+        .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Gagal menambahkan ke keranjang.');
+            return data;
+        })
+        .then(() => {
+            window.location.href = "{{ route('cart.index') }}";
+        })
+        .catch((err) => {
+            alert(err.message);
+        });
     });
 
     document.querySelectorAll('[data-requires-resep="1"]').forEach(card => {
         card.addEventListener('click', (e) => {
             e.preventDefault();
+            pendingResepProductId = card.dataset.productId || null;
             openResepModal();
         });
     });
 
-    // Tombol "tambah ke keranjang" tidak boleh ikut membuka halaman detail produk.
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const navCartCount = document.getElementById('navCartCount');
     const checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
@@ -1418,7 +1268,6 @@
 
     searchInput.addEventListener('input', applyFilter);
 
-    // ===== Kartu promo hero: klik untuk filter kategori & scroll ke produk =====
     document.querySelectorAll('.hero-promo-card[data-cat]').forEach(card => {
         card.addEventListener('click', () => {
             const cat = card.dataset.cat;
@@ -1431,17 +1280,57 @@
         });
     });
 
-    // ===== Carousel promo hero di layar kecil: sinkronisasi dot indikator =====
     const heroVisual = document.getElementById('heroVisual');
     const heroDots = document.querySelectorAll('.hero-dot');
+
     if(heroVisual && heroDots.length){
+        const slideCount = heroVisual.children.length;
+        let heroIndex = 0;
+        let heroAutoTimer = null;
+        let heroResumeTimer = null;
+        let isHeroDragging = false;
+
+        function setActiveDot(idx){
+            heroDots.forEach((d, i) => {
+                d.classList.toggle('active', i === idx);
+                d.classList.toggle('visited', i < idx);
+            });
+        }
+
+        function goToHeroSlide(idx, smooth = true){
+            const card = heroVisual.children[idx];
+            if(!card) return;
+            heroVisual.scrollTo({left: card.offsetLeft, behavior: smooth ? 'smooth' : 'auto'});
+            heroIndex = idx;
+            setActiveDot(idx);
+        }
+
+        function startHeroAutoplay(){
+            clearInterval(heroAutoTimer);
+            heroAutoTimer = setInterval(() => {
+                heroIndex = (heroIndex + 1) % slideCount;
+                goToHeroSlide(heroIndex);
+            }, 4200);
+        }
+
+        function pauseHeroAutoplay(){
+            clearInterval(heroAutoTimer);
+            clearTimeout(heroResumeTimer);
+            heroResumeTimer = setTimeout(startHeroAutoplay, 5500);
+        }
+
         heroDots.forEach(dot => {
             dot.addEventListener('click', () => {
-                const idx = parseInt(dot.dataset.index, 10);
-                const target = heroVisual.children[idx];
-                if(target) target.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+                goToHeroSlide(parseInt(dot.dataset.index, 10));
+                pauseHeroAutoplay();
             });
         });
+
+        heroVisual.addEventListener('pointerdown', () => { isHeroDragging = true; pauseHeroAutoplay(); });
+        heroVisual.addEventListener('pointerup', () => { isHeroDragging = false; });
+        heroVisual.addEventListener('touchstart', () => pauseHeroAutoplay(), {passive:true});
+        heroVisual.addEventListener('mouseenter', () => clearInterval(heroAutoTimer));
+        heroVisual.addEventListener('mouseleave', () => { if(!isHeroDragging) startHeroAutoplay(); });
 
         let heroScrollTimeout;
         heroVisual.addEventListener('scroll', () => {
@@ -1449,11 +1338,14 @@
             heroScrollTimeout = setTimeout(() => {
                 const firstCard = heroVisual.children[0];
                 if(!firstCard) return;
-                const cardWidth = firstCard.getBoundingClientRect().width + 12;
+                const cardWidth = firstCard.getBoundingClientRect().width;
                 const idx = Math.round(heroVisual.scrollLeft / cardWidth);
-                heroDots.forEach((d, i) => d.classList.toggle('active', i === idx));
-            }, 80);
+                heroIndex = Math.min(Math.max(idx, 0), slideCount - 1);
+                setActiveDot(heroIndex);
+            }, 100);
         });
+
+        startHeroAutoplay();
     }
 })();
 </script>

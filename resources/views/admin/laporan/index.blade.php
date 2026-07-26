@@ -57,8 +57,10 @@
 
         {{-- ===== GRAFIK PENDAPATAN HARIAN ===== --}}
         <div class="card">
-            <h3 style="font-size:1rem; margin-bottom:14px;">Tren Pendapatan Harian</h3>
-            <canvas id="chartPendapatan" height="110"></canvas>
+            <h3 style="font-size:1rem; margin-bottom:22px;">Tren Pendapatan Harian</h3>
+            <div style="height:320px;">
+                <canvas id="chartPendapatan"></canvas>
+            </div>
         </div>
 
         {{-- ===== PENDAPATAN PER KATEGORI ===== --}}
@@ -153,6 +155,10 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: { top: 20, bottom: 4 }
+                },
                 plugins: { legend: { display: false } },
                 scales: {
                     y: {
@@ -161,7 +167,10 @@
                         },
                         grid: { color: '#ecfdf5' }
                     },
-                    x: { grid: { display: false } }
+                    x: {
+                        grid: { display: false },
+                        ticks: { padding: 6 }
+                    }
                 }
             }
         });

@@ -16,12 +16,15 @@ class KurirPesananController extends Controller
         return view('kurir.pesanan', compact('pesanan'));
     }
 
-    public function show($id)
-    {
-        $pesanan = Pesanan::with(['user', 'detailPesanan.obat'])->findOrFail($id);
+public function show($id)
+{
+    $pesanan = Pesanan::with([
+        'user:id,name,phone,alamat,latitude,longitude',
+        'detailPesanan.obat'
+    ])->findOrFail($id);
 
-        return view('kurir.pesanan-detail', compact('pesanan'));
-    }
+    return view('kurir.pesanan-detail', compact('pesanan'));
+}
 
     public function ambil($id)
     {

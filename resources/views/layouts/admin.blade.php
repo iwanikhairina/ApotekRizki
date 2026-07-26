@@ -50,6 +50,30 @@
         a { text-decoration: none; color: inherit; }
 
         /* ===== NAVBAR ===== */
+        /* ===== FIX ICON PAGINATION (Laravel default pakai Tailwind, kita gak pakai) ===== */
+nav[role="navigation"] svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+nav[role="navigation"] {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: var(--ink-500);
+}
+
+nav[role="navigation"] a,
+nav[role="navigation"] span {
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+nav[role="navigation"] a:hover {
+    background: var(--mint-50);
+}
         .admin-navbar {
             position: sticky;
             top: 0;
@@ -272,6 +296,7 @@
             border: 1px solid #fecaca;
         }
     </style>
+    
 
     @stack('styles')
 </head>

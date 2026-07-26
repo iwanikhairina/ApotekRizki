@@ -104,6 +104,77 @@
         border:1px solid #eee;
         margin-bottom:10px;
     }
+    .doc-preview img.doc-zoomable{
+        cursor:zoom-in;
+        transition:opacity .15s;
+    }
+    .doc-preview img.doc-zoomable:hover{opacity:.9;}
+
+    /* ===== Modal preview gambar (zoom in/out) ===== */
+    .img-modal-backdrop{
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(15,23,20,.92);
+        z-index:500;
+        flex-direction:column;
+    }
+    .img-modal-backdrop.open{display:flex;}
+
+    .img-modal-toolbar{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        padding:14px;
+        flex-shrink:0;
+    }
+    .img-modal-toolbar button{
+        width:38px;height:38px;
+        border-radius:10px;
+        border:none;
+        background:rgba(255,255,255,.12);
+        color:#fff;
+        font-size:18px;
+        font-weight:700;
+        cursor:pointer;
+        display:flex;align-items:center;justify-content:center;
+        transition:background .15s;
+    }
+    .img-modal-toolbar button:hover{background:rgba(255,255,255,.22);}
+    .img-modal-toolbar #imgModalClose{
+        background:rgba(224,67,60,.85);
+        margin-left:14px;
+    }
+    .img-modal-toolbar #imgModalClose:hover{background:#e0433c;}
+    .img-modal-zoom-level{
+        color:#fff;
+        font-size:13px;
+        font-weight:700;
+        font-family:'Outfit',sans-serif;
+        min-width:52px;
+        text-align:center;
+    }
+
+    .img-modal-viewport{
+        flex:1;
+        overflow:hidden;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        position:relative;
+        cursor:grab;
+        touch-action:none;
+    }
+    .img-modal-viewport.dragging{cursor:grabbing;}
+    .img-modal-viewport img{
+        max-width:90%;
+        max-height:85vh;
+        user-select:none;
+        pointer-events:none;
+        transition:transform .05s linear;
+        border-radius:8px;
+    }
     .doc-label{
         font-size:13px;
         font-weight:700;
@@ -149,6 +220,74 @@
         border-radius:14px;
     }
 
+    .add-obat-form{margin-bottom:16px;}
+    .obat-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;}
+    .add-obat-form .field{flex:1;min-width:160px;}
+    .add-obat-form label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
+    .add-obat-form select,
+    .add-obat-form input{
+        width:100%;
+        padding:10px 12px;
+        border:1.5px solid #e2e8f0;
+        border-radius:12px;
+        font-size:13.5px;
+        font-family:inherit;
+    }
+    .add-obat-form select:focus,
+    .add-obat-form input:focus{outline:none;border-color:var(--mint-500);}
+    .btn-tambah-obat{
+        background:var(--mint-500);
+        color:#fff;
+        border:none;
+        padding:11px 20px;
+        border-radius:12px;
+        font-size:13.5px;
+        font-weight:700;
+        font-family:'Outfit',sans-serif;
+        cursor:pointer;
+        white-space:nowrap;
+    }
+    .btn-tambah-obat:hover{background:var(--mint-700);}
+    .btn-tambah-obat.outline{background:#fff;color:var(--mint-500);border:1.5px solid var(--mint-500);}
+    .btn-tambah-obat.outline:hover{background:var(--mint-50);}
+
+    .obat-list-item{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:12px 0;
+        border-bottom:1px solid #f0f4f2;
+        gap:10px;
+    }
+    .obat-list-item:last-child{border-bottom:none;}
+    .obat-list-item .qty-price{font-size:12.5px;color:var(--text-muted);margin-top:2px;}
+    .btn-hapus-obat{
+        background:#fff1f0;
+        color:#e0433c;
+        border:1px solid #ffd4d0;
+        width:30px;height:30px;
+        border-radius:9px;
+        cursor:pointer;
+        flex-shrink:0;
+        display:flex;align-items:center;justify-content:center;
+    }
+    .btn-hapus-obat:hover{background:#ffe4e1;}
+    .empty-list{color:var(--text-muted);font-size:13.5px;padding:6px 0;}
+
+    .catatan-apoteker-field{margin-bottom:14px;}
+    .catatan-apoteker-field label{display:block;font-size:12.5px;font-weight:700;color:var(--text-dark);margin-bottom:6px;}
+    .catatan-apoteker-field textarea{
+        width:100%;
+        min-height:80px;
+        padding:12px;
+        border:1.5px solid #e2e8f0;
+        border-radius:12px;
+        font-size:13.5px;
+        font-family:inherit;
+        resize:vertical;
+    }
+    .catatan-apoteker-field textarea:focus{outline:none;border-color:var(--mint-500);}
+
     @media (max-width:900px){
         .grid{grid-template-columns:1fr;}
     }
@@ -190,6 +329,7 @@
 @endif
 
 <div class="grid">
+    <div>
     <div class="card">
     <h3>Informasi Pelanggan</h3>
     <div class="info-row">
@@ -223,26 +363,97 @@
 @endif
 
         <div class="card">
-            <h3>Obat yang Membutuhkan Verifikasi</h3>
-            @forelse ($pesanan->detailPesanan as $detail)
-                @if ($detail->obat && ($detail->obat->perluResep() || $detail->obat->butuh_ktp))
-                    <div class="obat-flag-item">
-                        <div>
-                            <div class="obat-name">{{ $detail->obat->nama }}</div>
-                            <div class="flag-tags">
-                                @if ($detail->obat->perluResep())
-                                    <span class="tag tag-resep">Wajib Resep Dokter</span>
-                                @endif
-                                @if ($detail->obat->butuh_ktp)
-                                    <span class="tag tag-ktp">Verifikasi KTP / Status Nikah</span>
-                                @endif
+            <h3>Obat pada Pesanan Ini</h3>
+
+            @if ($pesanan->status_resep === 'menunggu')
+                <form method="POST" action="{{ route('apoteker.verifikasi.tambah-obat', $pesanan->id) }}" class="add-obat-form" id="tambahObatForm">
+                    @csrf
+                    <div id="obatRows">
+                        <div class="obat-row">
+                            <div class="field">
+                                <label>Pilih Obat (sesuai resep)</label>
+                                <select name="obat_id[]" required>
+                                    <option value="">— Pilih obat —</option>
+                                    @foreach ($daftarObat as $obatItem)
+                                        <option value="{{ $obatItem->id }}">
+                                            {{ $obatItem->nama }} — Rp{{ number_format($obatItem->harga, 0, ',', '.') }} (stok {{ $obatItem->stok }})
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
+                            <div class="field" style="max-width:100px;">
+                                <label>Jumlah</label>
+                                <input type="number" name="jumlah[]" min="1" value="1" required>
+                            </div>
+                            <button type="button" class="btn-hapus-obat btn-remove-row" title="Hapus baris ini">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:4px;">
+                        <button type="button" id="btnAddRow" class="btn-tambah-obat outline">+ Baris Obat Lain</button>
+                        <button type="submit" class="btn-tambah-obat">Tambahkan Semua ke Pesanan</button>
+                    </div>
+                </form>
+
+                <script>
+                (function(){
+                    const rowsContainer = document.getElementById('obatRows');
+                    const btnAddRow = document.getElementById('btnAddRow');
+                    if (!rowsContainer || !btnAddRow) return;
+
+                    function bindRemove(row){
+                        const btn = row.querySelector('.btn-remove-row');
+                        btn.addEventListener('click', () => {
+                            if (rowsContainer.children.length > 1) row.remove();
+                        });
+                    }
+
+                    btnAddRow.addEventListener('click', () => {
+                        const firstRow = rowsContainer.querySelector('.obat-row');
+                        const newRow = firstRow.cloneNode(true);
+                        newRow.querySelectorAll('select, input').forEach(el => {
+                            if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                            if (el.tagName === 'INPUT') el.value = 1;
+                        });
+                        rowsContainer.appendChild(newRow);
+                        bindRemove(newRow);
+                    });
+
+                    bindRemove(rowsContainer.querySelector('.obat-row'));
+                })();
+                </script>
+            @endif
+
+            @forelse ($pesanan->detailPesanan as $detail)
+                <div class="obat-list-item">
+                    <div>
+                        <div class="obat-name">{{ $detail->obat->nama ?? 'Obat dihapus' }}</div>
+                        <div class="qty-price">
+                            {{ $detail->jumlah }} pcs &times; Rp{{ number_format($detail->harga_satuan, 0, ',', '.') }}
+                        </div>
+                        <div class="flag-tags">
+                            @if ($detail->obat && $detail->obat->perluResep())
+                                <span class="tag tag-resep">Wajib Resep Dokter</span>
+                            @endif
+                            @if ($detail->obat && $detail->obat->butuh_ktp)
+                                <span class="tag tag-ktp">Verifikasi KTP / Status Nikah</span>
+                            @endif
                         </div>
                         <span style="font-size:13px;color:var(--text-muted);">{{ $detail->jumlah }} pcs</span>
                     </div>
-                @endif
+                    @if ($pesanan->status_resep === 'menunggu')
+                        <form method="POST" action="{{ route('apoteker.verifikasi.hapus-obat', [$pesanan->id, $detail->id]) }}" onsubmit="return confirm('Hapus obat ini dari pesanan?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-hapus-obat" title="Hapus obat ini">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z"/></svg>
+                            </button>
+                        </form>
+                    @endif
+                </div>
             @empty
-                <p style="font-size:14px;color:var(--text-muted);">Tidak ada obat yang membutuhkan verifikasi khusus.</p>
+                <p class="empty-list">Belum ada obat pada pesanan ini. Tambahkan sesuai isi resep di atas.</p>
             @endforelse
         </div>
 
@@ -251,7 +462,7 @@
             @if ($pesanan->resep_path)
                 <div class="doc-preview">
                     <div class="doc-label">📄 {{ basename($pesanan->resep_path) }}</div>
-                    <img src="{{ asset('storage/' . $pesanan->resep_path) }}" alt="Foto Resep">
+                    <img src="{{ asset('storage/' . $pesanan->resep_path) }}" alt="Foto Resep" class="doc-zoomable" onclick="openImgModal(this.src, this.alt)">
                 </div>
             @else
                 <div class="no-doc">Pelanggan belum mengunggah resep.</div>
@@ -263,7 +474,7 @@
             @if ($pesanan->ktp_path)
                 <div class="doc-preview">
                     <div class="doc-label">🪪 {{ basename($pesanan->ktp_path) }}</div>
-                    <img src="{{ asset('storage/' . $pesanan->ktp_path) }}" alt="Foto KTP">
+                    <img src="{{ asset('storage/' . $pesanan->ktp_path) }}" alt="Foto KTP" class="doc-zoomable" onclick="openImgModal(this.src, this.alt)">
                 </div>
             @else
                 <div class="no-doc">Pelanggan belum mengunggah KTP.</div>
@@ -276,33 +487,149 @@
             <h3>Aksi Verifikasi</h3>
 
             @if ($pesanan->status_resep === 'menunggu')
-    <div class="action-buttons">
-        @if (auth()->user()->isOnShiftNow())
-            <form method="POST" action="{{ route('apoteker.verifikasi.setujui', $pesanan->id) }}">
-                @csrf
-                <button type="submit" class="btn-action btn-setuju">✓ Setujui</button>
-            </form>
-            <form method="POST" action="{{ route('apoteker.verifikasi.tolak', $pesanan->id) }}" onsubmit="return confirm('Yakin ingin menolak dokumen ini? Pesanan akan otomatis dibatalkan.');">
-                @csrf
-                <button type="submit" class="btn-action btn-tolak">✕ Tolak</button>
-            </form>
-        @else
-            <button type="button" class="btn-action btn-setuju" disabled style="opacity:.5;cursor:not-allowed;" title="Kamu sedang di luar jam shift">
-                ✓ Setujui (Di luar jam shift)
-            </button>
-            <button type="button" class="btn-action btn-tolak" disabled style="opacity:.5;cursor:not-allowed;" title="Kamu sedang di luar jam shift">
-                ✕ Tolak (Di luar jam shift)
-            </button>
-        @endif
-    </div>
-@elseif ($pesanan->status_resep === 'disetujui')
-                <div class="status-note">Dokumen sudah disetujui. Pesanan dapat dilanjutkan ke proses berikutnya.</div>
+                <div class="action-buttons">
+                    @if (auth()->user()->isOnShiftNow())
+                        <form method="POST" action="{{ route('apoteker.verifikasi.setujui', $pesanan->id) }}">
+                            @csrf
+                            <div class="catatan-apoteker-field">
+                                <label>Catatan Apoteker (obat yang dibaca dari resep, dosis, dsb — opsional)</label>
+                                <textarea name="catatan_apoteker" placeholder="Contoh: Sesuai resep dr. Andi, Amoxicillin 500mg 3x1 selama 5 hari.">{{ old('catatan_apoteker', $pesanan->catatan_apoteker) }}</textarea>
+                            </div>
+                            <button type="submit" class="btn-action btn-setuju">✓ Setujui</button>
+                            <button type="submit" formaction="{{ route('apoteker.verifikasi.tolak', $pesanan->id) }}" onclick="return confirm('Yakin ingin menolak dokumen ini? Pesanan akan otomatis dibatalkan.');" class="btn-action btn-tolak" style="margin-top:10px;">✕ Tolak</button>
+                        </form>
+                    @else
+                        <button type="button" class="btn-action btn-setuju" disabled style="opacity:.5;cursor:not-allowed;" title="Kamu sedang di luar jam shift">
+                            ✓ Setujui (Di luar jam shift)
+                        </button>
+                        <button type="button" class="btn-action btn-tolak" disabled style="opacity:.5;cursor:not-allowed;" title="Kamu sedang di luar jam shift">
+                            ✕ Tolak (Di luar jam shift)
+                        </button>
+                    @endif
+                </div>
+            @elseif ($pesanan->status_resep === 'disetujui')
+                <div class="status-note">
+                    Dokumen sudah disetujui. Pesanan diteruskan ke kurir untuk pengiriman.
+                    @if ($pesanan->catatan_apoteker)
+                        <br><br><strong>Catatan:</strong> {{ $pesanan->catatan_apoteker }}
+                    @endif
+                </div>
             @elseif ($pesanan->status_resep === 'ditolak')
-                <div class="status-note">Dokumen ditolak. Pesanan ini telah dibatalkan otomatis.</div>
+                <div class="status-note">
+                    Dokumen ditolak. Pesanan ini telah dibatalkan otomatis.
+                    @if ($pesanan->catatan_apoteker)
+                        <br><br><strong>Alasan:</strong> {{ $pesanan->catatan_apoteker }}
+                    @endif
+                </div>
             @else
                 <div class="status-note">Pesanan ini tidak memerlukan verifikasi resep/dokumen khusus.</div>
             @endif
         </div>
     </div>
 </div>
+
+{{-- Modal preview gambar resep/KTP: zoom in/out + geser (pan) --}}
+<div class="img-modal-backdrop" id="imgModal">
+    <div class="img-modal-toolbar">
+        <button type="button" id="imgZoomOut" title="Perkecil">−</button>
+        <span class="img-modal-zoom-level" id="imgZoomLevel">100%</span>
+        <button type="button" id="imgZoomIn" title="Perbesar">+</button>
+        <button type="button" id="imgZoomReset" title="Reset ukuran">⟳</button>
+        <button type="button" id="imgModalClose" title="Tutup">✕</button>
+    </div>
+    <div class="img-modal-viewport" id="imgViewport">
+        <img id="imgModalImg" src="" alt="">
+    </div>
+</div>
+
+<script>
+(function(){
+    const modal      = document.getElementById('imgModal');
+    const viewport   = document.getElementById('imgViewport');
+    const img        = document.getElementById('imgModalImg');
+    const zoomLevel  = document.getElementById('imgZoomLevel');
+    const btnIn      = document.getElementById('imgZoomIn');
+    const btnOut     = document.getElementById('imgZoomOut');
+    const btnReset   = document.getElementById('imgZoomReset');
+    const btnClose   = document.getElementById('imgModalClose');
+
+    let scale = 1, posX = 0, posY = 0;
+    let dragging = false, startX = 0, startY = 0;
+
+    const MIN_SCALE = 0.5, MAX_SCALE = 5, STEP = 0.25;
+
+    window.openImgModal = function(src, alt){
+        img.src = src;
+        img.alt = alt || '';
+        scale = 1; posX = 0; posY = 0;
+        applyTransform();
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+
+    function closeModal(){
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+        img.src = '';
+    }
+
+    function applyTransform(){
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        zoomLevel.textContent = Math.round(scale * 100) + '%';
+    }
+
+    function setScale(newScale){
+        scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+        if (scale === 1) { posX = 0; posY = 0; }
+        applyTransform();
+    }
+
+    btnIn.addEventListener('click', () => setScale(scale + STEP));
+    btnOut.addEventListener('click', () => setScale(scale - STEP));
+    btnReset.addEventListener('click', () => setScale(1));
+    btnClose.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (!modal.classList.contains('open')) return;
+        if (e.key === 'Escape') closeModal();
+        if (e.key === '+' || e.key === '=') setScale(scale + STEP);
+        if (e.key === '-') setScale(scale - STEP);
+    });
+
+    // Zoom pakai scroll mouse
+    viewport.addEventListener('wheel', (e) => {
+        if (!modal.classList.contains('open')) return;
+        e.preventDefault();
+        setScale(scale + (e.deltaY < 0 ? STEP : -STEP));
+    }, { passive: false });
+
+    // Geser gambar (pan) saat sudah di-zoom, dengan klik-tahan-tarik
+    viewport.addEventListener('mousedown', (e) => {
+        if (scale <= 1) return;
+        dragging = true;
+        viewport.classList.add('dragging');
+        startX = e.clientX - posX;
+        startY = e.clientY - posY;
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        posX = e.clientX - startX;
+        posY = e.clientY - startY;
+        applyTransform();
+    });
+    window.addEventListener('mouseup', () => {
+        dragging = false;
+        viewport.classList.remove('dragging');
+    });
+
+    // Double-click untuk cepat zoom in/reset
+    img.addEventListener('dblclick', () => {
+        setScale(scale > 1 ? 1 : 2);
+    });
+})();
+</script>
 @endsection

@@ -8,37 +8,40 @@ class Pesanan extends Model
 {
     protected $table = 'pesanan';
 
-   protected $fillable = [
-    'user_id', 'kurir_id', 'alamat', 'jarak_km', 'ongkir', 'metode_pembayaran',
-    'catatan', 'status', 'alasan_batal', 'waktu_diambil', 'estimasi_menit',
-    'resep_path', 'ktp_path', 'status_resep', 'total_harga',
-];
+    protected $fillable = [
+        'user_id', 'kurir_id', 'alamat', 'jarak_km', 'ongkir', 'metode_pembayaran',
+        'catatan', 'catatan_apoteker', 'status', 'alasan_batal', 'waktu_diambil', 'estimasi_menit',
+        'resep_path', 'ktp_path', 'status_resep', 'total_harga',
+    ];
 
-protected $casts = [
-    'waktu_diambil' => 'datetime',
-];
+    protected $casts = [
+        'waktu_diambil' => 'datetime',
+    ];
 
-public function hitungEstimasiMenit(): int
-{
-    if (! $this->jarak_km) {
-        return 30; // default kalau jarak belum diatur
+    /**
+     * Estimasi waktu tempuh (menit), dihitung langsung dari jarak (km) —
+     * rasio 2 menit per km (≈ kecepatan rata-rata kurir 30 km/jam):
+     * 0,5 km → 1 menit, 5 km → 10 menit, 12 km → 24 menit, 18 km → 36 menit, dst.
+     * Selalu dihitung ulang dari jarak_km (tidak lagi terpaku ke nilai lama
+     * yang mungkin sudah tersimpan di kolom estimasi_menit).
+     */
+    public function hitungEstimasiMenit(): int
+    {
+        if (! $this->jarak_km) {
+            return 0;
+        }
+
+        return (int) max(1, round($this->jarak_km * 2));
     }
 
-    // Asumsi kecepatan rata-rata kurir 25 km/jam di area pegunungan Aceh Tengah
-    $menit = ($this->jarak_km / 25) * 60;
+    public function estimasiSelesaiAt(): ?\Carbon\Carbon
+    {
+        if (! $this->waktu_diambil || ! $this->estimasi_menit) {
+            return null;
+        }
 
-    return (int) max(10, round($menit));
-}
-
-public function estimasiSelesaiAt(): ?\Carbon\Carbon
-{
-    if (! $this->waktu_diambil || ! $this->estimasi_menit) {
-        return null;
+        return $this->waktu_diambil->copy()->addMinutes($this->estimasi_menit);
     }
-
-    return $this->waktu_diambil->copy()->addMinutes($this->estimasi_menit);
-}
-
 
     public function user()
     {
@@ -60,6 +63,27 @@ public function estimasiSelesaiAt(): ?\Carbon\Carbon
         return $this->detailPesanan->contains(function ($detail) {
             return $detail->obat && ($detail->obat->butuh_resep || $detail->obat->butuh_ktp);
         });
+    }
+
+    /**
+     * Sumber kebenaran tunggal: apakah pesanan ini mengandung obat yang
+     * perlu resep dokter (butuh_resep = true ATAU klasifikasi obat_keras).
+     * Dipakai di halaman detail pesanan untuk menampilkan form upload resep,
+     * dan nanti di panel apoteker untuk daftar verifikasi.
+     */
+    public function requiresResep(): bool
+    {
+        return $this->detailPesanan->contains(
+            fn ($detail) => $detail->obat && $detail->obat->perluResep()
+        );
+    }
+
+    /**
+     * True kalau resep sudah pernah diunggah untuk pesanan ini.
+     */
+    public function sudahUploadResep(): bool
+    {
+        return ! empty($this->resep_path);
     }
 
     public function hitungOngkirOtomatis(): ?float

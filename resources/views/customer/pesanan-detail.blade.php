@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Detail Pesanan - Apotek Rizki</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,35 +28,6 @@
     a{text-decoration:none; color:inherit;}
     button{font-family:inherit;}
 
-    /* ===== NAVBAR ===== */
-    .navbar{position:sticky; top:0; z-index:50; background:var(--white); border-bottom:1px solid var(--mint-deep);}
-    .navbar-inner{max-width:1100px; margin:0 auto; padding:14px 28px; display:flex; align-items:center; gap:28px;}
-    .nav-brand{display:flex; align-items:center; gap:10px; flex-shrink:0;}
-    .nav-brand .logo-box{width:42px; height:42px; border-radius:12px; background:var(--mint); display:flex; align-items:center; justify-content:center; padding:6px; flex-shrink:0;}
-    .nav-brand .logo-box img{width:100%; height:100%; object-fit:contain;}
-    .nav-brand .brand-text{font-family:'Outfit', sans-serif; font-weight:800; font-size:17px; line-height:1.15;}
-    .nav-brand .brand-text span{display:block; font-family:'Inter'; font-weight:500; font-size:10.5px; color:var(--muted); letter-spacing:.02em;}
-    .nav-links{display:flex; align-items:center; gap:4px; flex:1;}
-    .nav-links a{font-size:13.5px; font-weight:600; color:var(--muted); padding:9px 15px; border-radius:999px; transition:background .15s, color .15s; white-space:nowrap;}
-    .nav-links a:hover{background:var(--mint); color:var(--ink);}
-    .nav-links a.active{background:var(--spring); color:var(--white);}
-    .nav-toggle{display:none; width:40px; height:40px; border-radius:12px; border:none; background:var(--mint); align-items:center; justify-content:center; cursor:pointer;}
-    .nav-toggle svg{width:20px; height:20px; color:var(--ink);}
-    .nav-actions{display:flex; align-items:center; gap:10px; flex-shrink:0;}
-    .icon-btn{width:40px; height:40px; border-radius:12px; border:none; background:var(--mint); display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; color:var(--spring-deep); transition:background .15s;}
-    .icon-btn:hover{background:var(--mint-deep);}
-    .icon-btn svg{width:19px; height:19px;}
-    .cart-count{position:absolute; top:-4px; right:-4px; background:var(--error); color:var(--white); font-size:10px; font-weight:700; width:17px; height:17px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--white);}
-    .avatar-btn{width:40px; height:40px; border-radius:50%; background:var(--spring); color:var(--white); border:none; font-family:'Outfit'; font-weight:700; font-size:14px; cursor:pointer;}
-
-    @media (max-width:920px){
-        .nav-links{position:fixed; top:70px; left:0; right:0; background:var(--white); flex-direction:column; align-items:stretch; padding:10px 16px 16px; gap:2px; border-bottom:1px solid var(--mint-deep); box-shadow:var(--shadow-sm); display:none;}
-        .nav-links.open{display:flex;}
-        .nav-links a{padding:12px 14px;}
-        .nav-toggle{display:flex;}
-    }
-
-    /* ===== PAGE ===== */
     .page-wrap{max-width:760px; margin:0 auto; padding:28px 24px 60px;}
 
     .back-link{
@@ -110,7 +82,6 @@
     }
     .section-title:first-of-type{margin-top:0;}
 
-    /* ETA card */
     .eta-card{
         display:flex; align-items:center; gap:14px;
         background:#FFF3E0;
@@ -138,7 +109,6 @@
         margin-top:2px;
     }
 
-    /* Courier card */
     .courier-card{
         display:flex; align-items:center; gap:14px;
         background:var(--mint);
@@ -165,7 +135,6 @@
     .courier-call:hover{background:var(--mint-deep);}
     .courier-call svg{width:18px; height:18px;}
 
-    /* Confirm received button */
     .btn-confirm-received{
         width:100%;
         background:linear-gradient(135deg, var(--spring), var(--spring-deep));
@@ -177,7 +146,105 @@
     .btn-confirm-received:hover{filter:brightness(1.05);}
     .btn-confirm-received svg{width:18px; height:18px;}
 
-    /* Tracker */
+    /* Cancel button + modal */
+    .btn-cancel-order{
+        width:100%;
+        background:var(--white);
+        color:var(--error);
+        border:2px solid #f3c8c2;
+        padding:13px;
+        border-radius:14px;
+        font-family:'Outfit', sans-serif;
+        font-weight:700;
+        font-size:13.5px;
+        cursor:pointer;
+        margin-bottom:18px;
+        transition:background .15s;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+    }
+    .btn-cancel-order:hover{background:#FCE7E3;}
+    .btn-cancel-order svg{width:17px; height:17px;}
+
+    .cancel-reason{
+        font-size:12.5px;
+        color:#B23A29;
+        margin-top:6px;
+        font-weight:500;
+    }
+
+    .cancel-modal-backdrop{
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(29,43,38,0.55);
+        z-index:200;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+    }
+    .cancel-modal-backdrop.open{display:flex;}
+
+    .cancel-modal{
+        background:var(--white);
+        border-radius:22px;
+        padding:26px;
+        max-width:400px;
+        width:100%;
+        box-shadow:var(--shadow-md);
+    }
+
+    .cancel-modal h3{
+        font-family:'Outfit', sans-serif;
+        font-weight:700;
+        font-size:16px;
+        margin-bottom:6px;
+        color:var(--ink);
+    }
+    .cancel-modal p{
+        font-size:12.5px;
+        color:var(--muted);
+        line-height:1.5;
+        margin-bottom:16px;
+    }
+
+    .cancel-modal textarea{
+        width:100%;
+        border:2px solid var(--mint-deep);
+        border-radius:14px;
+        padding:12px 14px;
+        font-size:13px;
+        font-family:inherit;
+        color:var(--ink);
+        outline:none;
+        resize:vertical;
+        min-height:90px;
+    }
+    .cancel-modal textarea:focus{border-color:var(--error);}
+
+    .cancel-modal-actions{
+        display:flex;
+        gap:10px;
+        margin-top:16px;
+    }
+
+    .cancel-modal-btn{
+        flex:1;
+        padding:12px;
+        border-radius:14px;
+        border:none;
+        font-family:'Outfit', sans-serif;
+        font-weight:700;
+        font-size:13px;
+        cursor:pointer;
+    }
+    .cancel-modal-btn.secondary{background:var(--mint); color:var(--ink);}
+    .cancel-modal-btn.secondary:hover{background:var(--mint-deep);}
+    .cancel-modal-btn.primary{background:var(--error); color:var(--white);}
+    .cancel-modal-btn.primary:hover{background:#c8452f;}
+
     .tracker{display:flex; justify-content:space-between; align-items:flex-start; position:relative; padding:0 4px; margin:10px 0 6px;}
     .tracker-line{position:absolute; top:14px; left:24px; right:24px; height:2px; background:var(--mint-deep); z-index:0;}
     .tracker-line-fill{position:absolute; top:14px; left:24px; height:2px; background:var(--spring); z-index:1; transition:width .2s;}
@@ -192,7 +259,128 @@
     .cancel-note{display:flex; align-items:center; gap:10px; background:#FBE8E6; color:#B23A29; border-radius:14px; padding:12px 16px; font-size:12.5px; font-weight:600;}
     .cancel-note svg{width:18px; height:18px; flex-shrink:0;}
 
-    /* Item list */
+    .resep-card{
+        background:var(--white);
+        border:1.5px solid var(--mint-deep);
+        border-radius:16px;
+        padding:18px;
+        margin-bottom:18px;
+    }
+    .resep-card-head{
+        display:flex; align-items:center; gap:12px;
+        margin-bottom:4px;
+    }
+    .resep-icon{
+        width:42px; height:42px; border-radius:12px;
+        background:var(--mint); color:var(--spring-deep);
+        display:flex; align-items:center; justify-content:center;
+        flex-shrink:0;
+    }
+    .resep-icon svg{width:20px; height:20px;}
+    .resep-title{font-family:'Outfit', sans-serif; font-weight:700; font-size:14.5px;}
+    .resep-sub{font-size:12px; color:var(--muted); margin-top:1px;}
+
+    .resep-status{
+        display:inline-flex; align-items:center; gap:5px;
+        font-size:11px; font-weight:700;
+        padding:5px 12px; border-radius:999px;
+        margin-top:12px;
+    }
+    .resep-status svg{width:12px; height:12px;}
+    .resep-status.st-menunggu{background:#FDF1DF; color:#A66A17;}
+    .resep-status.st-disetujui{background:#E3F5EA; color:var(--spring-deep);}
+    .resep-status.st-ditolak{background:#FBE8E6; color:#B23A29;}
+
+    .resep-body{margin-top:14px;}
+    .resep-note{font-size:12.5px; color:var(--muted); line-height:1.5; margin-bottom:14px;}
+
+    .resep-preview{
+        display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    }
+    .resep-preview img{
+        width:88px; height:88px; object-fit:cover;
+        border-radius:12px; border:1px solid var(--mint-deep);
+    }
+
+    .resep-dropzone{
+        display:block;
+        border:2px dashed var(--mint-deep);
+        border-radius:14px;
+        background:var(--mint);
+        padding:20px 16px;
+        text-align:center;
+        cursor:pointer;
+        transition:border-color .15s, background .15s;
+    }
+    .resep-dropzone:hover{border-color:var(--spring); background:var(--mint-deep);}
+    .resep-dropzone svg{width:24px; height:24px; color:var(--spring-deep); margin-bottom:8px;}
+    .resep-dropzone .dz-title{font-size:13px; font-weight:600; color:var(--ink);}
+    .resep-dropzone .dz-sub{font-size:11px; color:var(--muted); margin-top:2px;}
+    .resep-dropzone input[type="file"]{display:none;}
+
+    .resep-filename{
+        display:none;
+        align-items:center; gap:8px;
+        font-size:12.5px; font-weight:600; color:var(--spring-deep);
+        margin-top:10px;
+    }
+    .resep-filename svg{width:15px; height:15px; flex-shrink:0;}
+
+    .resep-error{
+        color:var(--error); font-size:12px; font-weight:600;
+        margin-top:8px;
+    }
+
+    .btn-resep-submit{
+        width:100%;
+        background:var(--spring); color:#fff; border:none;
+        padding:12px; border-radius:12px;
+        font-family:'Outfit', sans-serif; font-weight:700; font-size:13.5px;
+        cursor:pointer; margin-top:12px;
+        transition:background .15s;
+    }
+    .btn-resep-submit:hover{background:var(--spring-deep);}
+
+    /* ===== CARD PEMBAYARAN ===== */
+    .payment-card{
+        background:var(--white);
+        border:1.5px solid #BFE0F5;
+        border-radius:16px;
+        padding:18px;
+        margin-bottom:18px;
+    }
+    .payment-total{
+        background:#E5F1FB;
+        border-radius:12px;
+        padding:14px 16px;
+        margin-bottom:14px;
+    }
+    .payment-total .label{font-size:11px; font-weight:700; color:#2E6FA3; text-transform:uppercase; letter-spacing:.03em;}
+    .payment-total .value{font-family:'Outfit', sans-serif; font-weight:800; font-size:20px; color:var(--ink); margin-top:4px;}
+    .payment-total .breakdown{font-size:11.5px; color:var(--muted); margin-top:4px;}
+
+    .payment-methods{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+    .btn-pay{
+        flex:1; min-width:140px;
+        border:2px solid var(--mint-deep);
+        background:var(--white);
+        color:var(--ink);
+        padding:13px;
+        border-radius:14px;
+        font-family:'Outfit', sans-serif;
+        font-weight:700;
+        font-size:13.5px;
+        cursor:pointer;
+        transition:border-color .15s, background .15s;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+    }
+    .btn-pay svg{width:17px; height:17px;}
+    .btn-pay:hover{border-color:var(--spring); background:var(--mint);}
+    .btn-pay.qris:hover{border-color:#2E6FA3; background:#E5F1FB;}
+
     .item-row{display:flex; align-items:center; gap:14px; background:var(--mint); border-radius:14px; padding:12px 14px; margin-bottom:8px;}
     .item-thumb{width:44px; height:44px; border-radius:10px; flex-shrink:0; background:linear-gradient(150deg, var(--mint-deep), #BFE6D3); display:flex; align-items:center; justify-content:center;}
     .item-thumb svg{width:20px; height:20px; color:var(--spring); opacity:.6;}
@@ -206,7 +394,6 @@
     .drug-badge.keras{background:#FBE8E6; color:#B23A29;}
     .item-price{font-family:'Outfit', sans-serif; font-weight:700; font-size:13.5px; flex-shrink:0;}
 
-    /* Info blocks */
     .info-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
     .info-block span.label{display:block; font-size:11px; font-weight:700; color:var(--spring-deep); text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px;}
     .info-block p{font-size:13.5px; color:var(--ink);}
@@ -218,7 +405,6 @@
     }
     .payment-chip svg{width:18px; height:18px; color:var(--spring-deep); flex-shrink:0;}
 
-    /* Summary */
     .summary{background:var(--mint); border-radius:14px; padding:16px 18px;}
     .summary-row{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); padding:5px 0;}
     .summary-row.total{font-family:'Outfit', sans-serif; font-weight:700; font-size:15px; color:var(--ink); border-top:1px dashed var(--mint-deep); margin-top:8px; padding-top:12px;}
@@ -267,34 +453,7 @@
     $itemCount = collect($order['items'])->sum('qty');
 @endphp
 
-<nav class="navbar">
-    <div class="navbar-inner">
-        <a href="{{ route('dashboard') }}" class="nav-brand">
-            <div class="logo-box">
-                <img src="{{ asset('assets/images/logo-apotekrizki.png') }}" alt="Logo Apotek Rizki">
-            </div>
-            <div class="brand-text">Apotek Rizki<span>Layanan obat terpercaya</span></div>
-        </a>
-
-        <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Buka menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-        </button>
-
-        <div class="nav-links" id="navLinks">
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Beranda</a>
-            <a href="{{ route('resep.upload') }}" class="{{ request()->routeIs('resep.*') ? 'active' : '' }}">Upload Resep</a>
-            <a href="{{ route('pesanan.index') }}" class="{{ request()->routeIs('pesanan.*') ? 'active' : '' }}">Pesanan Saya</a>
-        </div>
-
-        <div class="nav-actions">
-            <button class="icon-btn" aria-label="Keranjang">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.6a2 2 0 0 0 2-1.6L23 6H6"/></svg>
-                <span class="cart-count">3</span>
-            </button>
-            <button class="avatar-btn" aria-label="Akun saya">A</button>
-        </div>
-    </div>
-</nav>
+<x-customer-navbar />
 
 <div class="page-wrap">
     <a href="{{ route('pesanan.index') }}" class="back-link">
@@ -312,7 +471,12 @@
     <div class="detail-card">
         <div class="detail-head">
             <div>
-                <div class="order-code">{{ $order['code'] }}</div>
+                {{-- Kode pesanan (P019, dsb) sengaja TIDAK ditampilkan ke customer,
+                     tapi tetap tersimpan di $order['code'] dan tetap dipakai di
+                     semua route/form action di bawah (upload resep, batalkan,
+                     bayar, terima). Untuk apoteker/kurir/owner kode tetap tampil
+                     seperti biasa di panel masing-masing. --}}
+                <div class="order-code">Pesanan Anda</div>
                 <div class="order-date">Dipesan pada {{ $order['created_at']->translatedFormat('d F Y') }}</div>
             </div>
             <span class="status-badge st-{{ $status }}">
@@ -324,7 +488,12 @@
         @if($status === 'dibatalkan')
             <div class="cancel-note">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
-                Pesanan ini telah dibatalkan.
+                <div>
+                    Pesanan ini telah dibatalkan.
+                    @if($order['alasan_batal'])
+                        <div class="cancel-reason">Alasan: {{ $order['alasan_batal'] }}</div>
+                    @endif
+                </div>
             </div>
         @else
             @if($status === 'dikirim' && $order['eta_at'] !== null)
@@ -381,6 +550,50 @@
                 </form>
             @endif
 
+            @if ($order['menunggu_pembayaran'])
+                <div class="payment-card">
+                    <div class="resep-card-head" style="margin-bottom:14px;">
+                        <div class="resep-icon" style="background:#E5F1FB; color:#2E6FA3;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                        </div>
+                        <div>
+                            <div class="resep-title">Resep Disetujui — Pilih Pembayaran</div>
+                            <div class="resep-sub">Apoteker sudah menyiapkan obat sesuai resepmu</div>
+                        </div>
+                    </div>
+
+                    <div class="payment-total">
+                        <div class="label">Total Tagihan</div>
+                        <div class="value">Rp{{ number_format($order['total_harga'] + $order['shipping_cost'], 0, ',', '.') }}</div>
+                        <div class="breakdown">
+                            Obat Rp{{ number_format($order['total_harga'], 0, ',', '.') }}
+                            + Ongkir Rp{{ number_format($order['shipping_cost'], 0, ',', '.') }}
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ route('pesanan.bayar', $order['code']) }}">
+                        @csrf
+                        <div class="payment-methods">
+                            <button type="submit" name="metode_pembayaran" value="cod" class="btn-pay">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+                                Bayar COD
+                            </button>
+                            <button type="submit" name="metode_pembayaran" value="qris" class="btn-pay qris">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                                Bayar QRIS
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
+            @if ($order['can_cancel'])
+                <button type="button" class="btn-cancel-order" id="openCancelModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                    Batalkan Pesanan
+                </button>
+            @endif
+
             <div class="tracker">
                 <div class="tracker-line"></div>
                 <div class="tracker-line-fill" style="width: {{ $currentStep * 33.33 }}%"></div>
@@ -400,8 +613,83 @@
             </div>
         @endif
 
+        @if($order['requires_resep'])
+            <div class="resep-card">
+                <div class="resep-card-head">
+                    <div class="resep-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h2"/></svg>
+                    </div>
+                    <div>
+                        <div class="resep-title">Resep Dokter</div>
+                        <div class="resep-sub">Pesanan ini berisi obat yang memerlukan resep</div>
+                    </div>
+                </div>
+
+                @if(in_array($order['status_resep'], ['menunggu', 'disetujui', 'ditolak']))
+                    <span class="resep-status st-{{ $order['status_resep'] }}">
+                        @if($order['status_resep'] === 'menunggu')
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                            Menunggu Verifikasi Apoteker
+                        @elseif($order['status_resep'] === 'disetujui')
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            Resep Disetujui
+                        @elseif($order['status_resep'] === 'ditolak')
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                            Resep Ditolak — Unggah Ulang
+                        @endif
+                    </span>
+                @endif
+
+                <div class="resep-body">
+                    @if($order['resep_url'] && $order['status_resep'] !== 'ditolak')
+                        <div class="resep-preview">
+                            <img src="{{ $order['resep_url'] }}" alt="Foto resep yang diunggah">
+                            <div>
+                                <div class="resep-note" style="margin-bottom:0;">
+                                    @if($order['status_resep'] === 'disetujui')
+                                        Resep sudah diverifikasi dan disetujui apoteker.
+                                    @else
+                                        Resep sedang ditinjau apoteker, mohon tunggu konfirmasi.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <p class="resep-note">
+                            @if($order['status_resep'] === 'ditolak')
+                                Resep sebelumnya ditolak apoteker. Silakan unggah ulang foto resep yang jelas dan sesuai.
+                            @else
+                                Unggah foto resep dokter agar apoteker dapat memverifikasi pesananmu.
+                            @endif
+                        </p>
+
+                        <form action="{{ route('pesanan.upload-resep', $order['code']) }}" method="POST" enctype="multipart/form-data" id="resepForm">
+                            @csrf
+                            <label class="resep-dropzone" for="resepInput">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                                <div class="dz-title">Klik untuk pilih foto resep</div>
+                                <div class="dz-sub">JPG atau PNG, maks 5MB</div>
+                                <input type="file" name="resep" id="resepInput" accept="image/png, image/jpeg" required>
+                            </label>
+
+                            <div class="resep-filename" id="resepFilename">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                <span id="resepFilenameText"></span>
+                            </div>
+
+                            @error('resep')
+                                <div class="resep-error">{{ $message }}</div>
+                            @enderror
+
+                            <button type="submit" class="btn-resep-submit">Unggah Resep</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <div class="section-title">Produk Dipesan</div>
-        @foreach ($order['items'] as $item)
+        @forelse ($order['items'] as $item)
             <div class="item-row">
                 <div class="item-thumb">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4.93 4.93a6 6 0 0 1 8.49 0l5.66 5.66a6 6 0 1 1-8.49 8.49L4.93 13.4a6 6 0 0 1 0-8.49Z"/></svg>
@@ -417,7 +705,11 @@
                 </div>
                 <div class="item-price">Rp{{ number_format($item['price'], 0, ',', '.') }}</div>
             </div>
-        @endforeach
+        @empty
+            <p style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">
+                Belum ada obat pada pesanan ini. Apoteker akan menambahkan obat sesuai resep yang kamu unggah.
+            </p>
+        @endforelse
 
         <div class="section-title">Informasi Pengiriman</div>
         <div class="info-grid">
@@ -428,8 +720,8 @@
             <div class="info-block">
                 <span class="label">Metode Pembayaran</span>
                 <span class="payment-chip">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $paymentIcons[$order['payment_method']] !!}</svg>
-                    {{ $paymentLabel[$order['payment_method']] ?? $order['payment_method'] }}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $paymentIcons[$order['payment_method']] ?? '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>' !!}</svg>
+                    {{ $paymentLabel[$order['payment_method']] ?? 'Belum dipilih' }}
                 </span>
             </div>
         </div>
@@ -451,6 +743,57 @@
         </div>
     </div>
 </div>
+
+@if ($order['can_cancel'])
+<div class="cancel-modal-backdrop" id="cancelModal">
+    <div class="cancel-modal">
+        {{-- Kode pesanan sengaja tidak disebut di judul modal ini juga --}}
+        <h3>Batalkan Pesanan Ini?</h3>
+        <p>Beri tahu kami kenapa kamu ingin membatalkan pesanan ini. Tindakan ini tidak bisa dibatalkan.</p>
+
+        <form method="POST" action="{{ route('pesanan.batalkan', $order['code']) }}">
+            @csrf
+            <textarea name="alasan_batal" placeholder="Contoh: Salah pesan produk, ingin ganti alamat, dll." required minlength="5" maxlength="500"></textarea>
+
+            <div class="cancel-modal-actions">
+                <button type="button" class="cancel-modal-btn secondary" id="closeCancelModal">Batal</button>
+                <button type="submit" class="cancel-modal-btn primary">Ya, Batalkan Pesanan</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
+<script>
+(function(){
+    const input = document.getElementById('resepInput');
+    const filenameBox = document.getElementById('resepFilename');
+    const filenameText = document.getElementById('resepFilenameText');
+
+    if (input) {
+        input.addEventListener('change', () => {
+            if (input.files && input.files.length > 0) {
+                filenameText.textContent = input.files[0].name;
+                filenameBox.style.display = 'flex';
+            } else {
+                filenameBox.style.display = 'none';
+            }
+        });
+    }
+
+    const cancelModal = document.getElementById('cancelModal');
+    const openCancelModal = document.getElementById('openCancelModal');
+    const closeCancelModal = document.getElementById('closeCancelModal');
+
+    if (openCancelModal && cancelModal) {
+        openCancelModal.addEventListener('click', () => cancelModal.classList.add('open'));
+        closeCancelModal.addEventListener('click', () => cancelModal.classList.remove('open'));
+        cancelModal.addEventListener('click', (e) => {
+            if (e.target === cancelModal) cancelModal.classList.remove('open');
+        });
+    }
+})();
+</script>
 
 </body>
 </html>

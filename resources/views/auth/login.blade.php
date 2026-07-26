@@ -42,16 +42,28 @@
         border-radius:50%;
         filter:blur(2px);
         z-index:0;
+        pointer-events:none;
     }
     .blob1{
         width:420px;height:420px;
         background:var(--mint-deep);
         top:-160px; left:-140px;
+        animation:blobDrift1 14s ease-in-out infinite;
     }
     .blob2{
         width:340px;height:340px;
         background:#FFE4D8;
         bottom:-140px; right:-120px;
+        animation:blobDrift2 17s ease-in-out infinite;
+    }
+
+    @keyframes blobDrift1{
+        0%,100%{transform:translate(0,0) scale(1);}
+        50%{transform:translate(24px,18px) scale(1.05);}
+    }
+    @keyframes blobDrift2{
+        0%,100%{transform:translate(0,0) scale(1);}
+        50%{transform:translate(-20px,-16px) scale(1.04);}
     }
 
     .wrap{
@@ -59,6 +71,12 @@
         z-index:1;
         width:100%;
         max-width:420px;
+        animation:wrapIn .6s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    @keyframes wrapIn{
+        from{opacity:0; transform:translateY(18px);}
+        to{opacity:1; transform:translateY(0);}
     }
 
     .top-illustration{
@@ -78,6 +96,18 @@
         justify-content:center;
         box-shadow:0 14px 26px -8px rgba(18,168,116,0.35);
         padding:10px;
+        transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease;
+        animation:badgePulse 3.2s ease-in-out infinite;
+    }
+    .capsule-badge:hover{
+        transform:translateY(-4px) scale(1.05) rotate(-2deg);
+        box-shadow:0 20px 34px -10px rgba(18,168,116,0.45);
+        animation-play-state:paused;
+    }
+
+    @keyframes badgePulse{
+        0%,100%{box-shadow:0 14px 26px -8px rgba(18,168,116,0.35);}
+        50%{box-shadow:0 14px 30px -6px rgba(18,168,116,0.5);}
     }
 
     .capsule-badge img{
@@ -106,7 +136,13 @@
         border-radius:50%;
         background:var(--mint);
         border:2px solid var(--white);
+        transition:background .25s ease, transform .25s ease;
     }
+    .card:hover .blister-row span:nth-child(1){background:var(--spring); transform:translateY(-2px);}
+    .card:hover .blister-row span:nth-child(2){background:var(--spring); transform:translateY(-2px); transition-delay:.03s;}
+    .card:hover .blister-row span:nth-child(3){background:var(--spring); transform:translateY(-2px); transition-delay:.06s;}
+    .card:hover .blister-row span:nth-child(4){background:var(--spring); transform:translateY(-2px); transition-delay:.09s;}
+    .card:hover .blister-row span:nth-child(5){background:var(--spring); transform:translateY(-2px); transition-delay:.12s;}
 
     .brand-row{
         text-align:center;
@@ -154,6 +190,15 @@
         font-size:13px;
         margin-bottom:16px;
         font-weight:500;
+        animation:alertShake .45s ease;
+    }
+
+    @keyframes alertShake{
+        0%,100%{transform:translateX(0);}
+        20%{transform:translateX(-6px);}
+        40%{transform:translateX(5px);}
+        60%{transform:translateX(-4px);}
+        80%{transform:translateX(3px);}
     }
 
     .field{margin-bottom:16px;}
@@ -164,6 +209,7 @@
         font-weight:600;
         color:var(--ink);
         margin-bottom:7px;
+        transition:color .18s ease;
     }
 
     .field-input{
@@ -172,12 +218,18 @@
         background:var(--mint);
         border:2px solid transparent;
         border-radius:16px;
-        transition:border-color .18s, background .18s;
+        transition:border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
     }
 
     .field-input:focus-within{
         border-color:var(--spring);
         background:var(--white);
+        box-shadow:0 0 0 4px rgba(18,168,116,0.12);
+        transform:translateY(-1px);
+    }
+
+    .field:has(.field-input:focus-within) label{
+        color:var(--spring-deep);
     }
 
     .field-input svg{
@@ -185,7 +237,10 @@
         margin-left:16px;
         color:var(--spring-deep);
         flex-shrink:0;
+        transition:transform .2s ease;
     }
+
+    .field-input:focus-within svg{transform:scale(1.08);}
 
     .field-input input{
         width:100%;
@@ -207,7 +262,12 @@
         display:flex;
     }
 
-    .field-input button svg{margin:0; color:var(--muted);}
+    .field-input button svg{
+        margin:0; color:var(--muted);
+        transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
+    }
+    .field-input button:hover svg{color:var(--spring-deep); transform:scale(1.1);}
+    .field-input button.toggled svg{transform:rotate(180deg) scale(1.1);}
 
     .error-text{
         color:var(--error);
@@ -261,12 +321,34 @@
         justify-content:center;
         gap:8px;
         box-shadow:0 14px 24px -10px rgba(18,168,116,0.6);
-        transition:background .18s, transform .12s;
+        transition:background .18s, transform .12s, box-shadow .18s;
+        position:relative;
+        overflow:hidden;
     }
 
-    .btn-login:hover{background:var(--spring-deep);}
+    .btn-login:hover{background:var(--spring-deep); box-shadow:0 16px 28px -8px rgba(18,168,116,0.65);}
     .btn-login:active{transform:scale(0.98);}
-    .btn-login svg{width:16px;height:16px;}
+    .btn-login svg{width:16px;height:16px; transition:transform .2s ease;}
+    .btn-login:hover svg{transform:translateX(3px);}
+
+    .btn-login:disabled{
+        cursor:not-allowed;
+        opacity:.85;
+    }
+
+    .btn-spinner{
+        width:16px; height:16px;
+        border-radius:50%;
+        border:2.5px solid rgba(255,255,255,0.4);
+        border-top-color:var(--white);
+        animation:spin .7s linear infinite;
+        display:none;
+    }
+    .btn-login.is-loading .btn-spinner{display:inline-block;}
+    .btn-login.is-loading .btn-label,
+    .btn-login.is-loading .btn-arrow{display:none;}
+
+    @keyframes spin{to{transform:rotate(360deg);}}
 
     .pill-tags{
         display:flex;
@@ -281,6 +363,11 @@
         background:var(--mint);
         padding:6px 12px;
         border-radius:999px;
+        transition:transform .18s ease, background .18s ease;
+    }
+    .pill-tags span:hover{
+        transform:translateY(-2px);
+        background:var(--mint-deep);
     }
 
     .register-link{
@@ -297,9 +384,19 @@
         color:var(--spring-deep);
         font-weight:700;
         text-decoration:none;
+        position:relative;
     }
-
-    .register-link a:hover{text-decoration:underline;}
+    .register-link a::after{
+        content:'';
+        position:absolute;
+        left:0; right:0; bottom:-2px;
+        height:1.5px;
+        background:var(--spring-deep);
+        transform:scaleX(0);
+        transform-origin:right;
+        transition:transform .22s ease;
+    }
+    .register-link a:hover::after{transform:scaleX(1); transform-origin:left;}
 
     .footer-text{
         text-align:center;
@@ -339,11 +436,6 @@
             <div class="tag">Layanan obat terpercaya untuk keluarga</div>
         </div>
 
-        <div class="heading">
-            <h1>Masuk ke akun kamu</h1>
-            <p>Kelola stok dan transaksi apotek dengan mudah</p>
-        </div>
-
         @if ($errors->any())
             <div class="alert">{{ $errors->first() }}</div>
         @endif
@@ -352,7 +444,7 @@
             <div class="alert">{{ session('error') }}</div>
         @endif
 
-        <form method="POST" action="{{ route('login.submit') }}">
+        <form method="POST" action="{{ route('login.submit') }}" id="loginForm">
             @csrf
 
             <div class="field">
@@ -369,18 +461,17 @@
                 <div class="field-input">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                     <input type="password" id="password" name="password" placeholder="Masukkan password" required>
-                    <button type="button" onclick="togglePassword()" aria-label="Tampilkan password">
+                    <button type="button" id="togglePasswordBtn" aria-label="Tampilkan password">
                         <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
                 @error('password')<div class="error-text">{{ $message }}</div>@enderror
             </div>
 
-        
-
-            <button type="submit" class="btn-login">
-                Masuk sekarang
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span class="btn-spinner"></span>
+                <span class="btn-label">Masuk sekarang</span>
+                <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
         </form>
 
@@ -397,17 +488,30 @@
 </div>
 
 <script>
-function togglePassword(){
-    const input = document.getElementById('password');
-    const icon = document.getElementById('eyeIcon');
-    if(input.type === 'password'){
-        input.type = 'text';
-        icon.innerHTML = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.6 21.6 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a21.6 21.6 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/>';
-    } else {
-        input.type = 'password';
-        icon.innerHTML = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>';
-    }
-}
+(function(){
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    toggleBtn.addEventListener('click', function(){
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        toggleBtn.classList.toggle('toggled');
+
+        eyeIcon.innerHTML = isPassword
+            ? '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.6 21.6 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a21.6 21.6 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/>'
+            : '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>';
+    });
+
+    // Tampilkan loading state saat submit, mencegah klik ganda
+    const form = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+
+    form.addEventListener('submit', function(){
+        loginBtn.classList.add('is-loading');
+        loginBtn.disabled = true;
+    });
+})();
 </script>
 
 </body>

@@ -88,24 +88,22 @@
 {{-- ===== OBAT MENDEKATI KADALUARSA (FEFO) ===== --}}
 <div class="card">
     <h3 style="font-size:1.05rem; margin-bottom:16px;">⏳ Mendekati Kadaluarsa</h3>
+
     @if($obatMendekatiKadaluarsa->isEmpty())
-        <p style="color:var(--ink-500); font-size:0.88rem;">Tidak ada obat yang mendekati kadaluarsa dalam 30 hari ke depan.</p>
+        <p style="color:var(--ink-500); font-size:0.88rem;">
+            Tidak ada obat yang mendekati kadaluarsa dalam 30 hari ke depan.
+        </p>
     @else
         <div style="display:flex; flex-direction:column; gap:10px;">
             @foreach($obatMendekatiKadaluarsa as $obat)
-                @php
-                    $sisaHari = now()->diffInDays($obat->tanggal_kadaluarsa, false);
-                    $warna = $sisaHari <= 7 ? '#ef4444' : ($sisaHari <= 14 ? '#f59e0b' : '#0ea5e9');
-                @endphp
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--mint-50); border-radius:10px;">
-                    <div>
-                        <div style="font-weight:600; font-size:0.88rem; color:var(--ink-900);">{{ $obat->nama }}</div>
-                        <div style="font-size:0.76rem; color:var(--ink-500);">
-                            Kadaluarsa {{ $obat->tanggal_kadaluarsa->translatedFormat('d F Y') }} &middot; Stok {{ $obat->stok }} pcs
-                        </div>
+                <div style="padding:10px 12px; background:var(--mint-50); border-radius:10px;">
+                    <div style="font-weight:600; font-size:0.88rem; color:var(--ink-900);">
+                        {{ $obat->nama }}
                     </div>
-                    <div style="font-weight:700; font-size:0.85rem; padding:4px 10px; border-radius:999px; background:{{ $warna }}22; color:{{ $warna }};">
-                        {{ $sisaHari <= 0 ? 'Kadaluarsa!' : $sisaHari . ' hari lagi' }}
+                    <div style="font-size:0.76rem; color:var(--ink-500);">
+                        Kadaluarsa {{ $obat->tanggal_kadaluarsa->translatedFormat('d F Y') }}
+                        &middot;
+                        Stok {{ $obat->stok }} pcs
                     </div>
                 </div>
             @endforeach

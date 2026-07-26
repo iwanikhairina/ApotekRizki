@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Obat;
+use App\Support\KategoriObat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -11,22 +12,7 @@ use Illuminate\Validation\Rule;
 class ObatController extends Controller
 {
     /**
-     * Daftar kategori tetap (dropdown), sesuai kategori yang tampil ke pelanggan.
-     */
-    const KATEGORI_LIST = [
-        'Obat',
-        'Nutrisi',
-        'Suplemen',
-        'Produk Bayi',
-        'Herbal',
-        'Alat Kesehatan',
-        'Mata',
-        'Kecantikan',
-        'Kontrasepsi',
-    ];
-
-    /**
-     * Daftar semua obat, dengan filter kategori, klasifikasi, dan status kadaluarsa.
+     * Daftar kategori, dengan filter kategori, klasifikasi, dan status kadaluarsa.
      */
     public function index(Request $request)
     {
@@ -52,7 +38,7 @@ class ObatController extends Controller
 
         return view('admin.obat.index', [
             'obat'              => $obat,
-            'daftarKategori'    => self::KATEGORI_LIST,
+            'daftarKategori'    => KategoriObat::namaList(),
             'filterKategori'    => $request->kategori,
             'filterKlasifikasi' => $request->klasifikasi,
             'filterStatus'      => $request->status,
@@ -61,7 +47,7 @@ class ObatController extends Controller
 
     public function create()
     {
-        return view('admin.obat.create', ['daftarKategori' => self::KATEGORI_LIST]);
+        return view('admin.obat.create', ['daftarKategori' => KategoriObat::namaList()]);
     }
 
     public function store(Request $request)
@@ -79,7 +65,7 @@ class ObatController extends Controller
 
     public function edit(Obat $obat)
     {
-        return view('admin.obat.edit', ['obat' => $obat, 'daftarKategori' => self::KATEGORI_LIST]);
+        return view('admin.obat.edit', ['obat' => $obat, 'daftarKategori' => KategoriObat::namaList()]);
     }
 
     public function update(Request $request, Obat $obat)
@@ -106,7 +92,7 @@ class ObatController extends Controller
     {
         $data = $request->validate([
             'nama'               => ['required', 'string', 'max:255'],
-            'kategori'           => ['required', Rule::in(self::KATEGORI_LIST)],
+            'kategori'           => ['required', Rule::in(KategoriObat::namaList())],
             'deskripsi'          => ['nullable', 'string'],
             'klasifikasi'        => ['required', Rule::in(['obat_bebas', 'obat_bebas_terbatas', 'obat_keras'])],
             'butuh_resep'        => ['nullable', 'boolean'],

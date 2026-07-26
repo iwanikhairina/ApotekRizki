@@ -4,208 +4,137 @@ namespace App\Http\Controllers;
 
 use App\Models\CartItem;
 use App\Models\DetailPesanan;
-use App\Models\Notifikasi;
-use App\Models\Obat;
 use App\Models\Pesanan;
-use App\Models\User;
-use App\Support\DistanceCalculator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
-    /**
-     * GET /checkout — halaman konfirmasi sebelum pesanan disimpan.
-     * Semua angka (jarak, ongkir, total) dihitung ulang di server,
-     * tidak dipercaya dari session/keranjang di sisi klien.
-     */
-    public function show(Request $request)
+    public function show()
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $cartItems = CartItem::with('obat')->where('user_id', $user->id)->get();
 
         if ($cartItems->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Keranjang kamu masih kosong.');
+            return redirect()->route('cart.index');
         }
 
-        $alamatLengkap = (bool) ($user->alamat && $user->latitude && $user->longitude);
-
-        if (! $alamatLengkap) {
+        if (!$user->alamat) {
             return redirect()->route('cart.index')
-                ->with('error', 'Lengkapi alamat pengiriman terlebih dahulu sebelum checkout.');
+                ->with('error', 'Lengkapi alamat pengiriman terlebih dahulu.');
         }
 
-        $jarakKm = DistanceCalculator::km(
-            config('apotek.latitude'),
-            config('apotek.longitude'),
-            $user->latitude,
-            $user->longitude
-        );
+        $subtotal = $cartItems->sum(fn ($item) => $item->obat->harga * $item->quantity);
 
-        $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm);
-        $bisaDiantar = $ongkir !== null;
+        // GANTI: pakai jarak_km yang sudah dihitung DistanceCalculator di CartController
+        $jarakKm = $user->jarak_km ?? null;
+        $ongkir  = $this->hitungOngkir($jarakKm);
 
-        if (! $bisaDiantar) {
+        if (is_null($ongkir)) {
             return redirect()->route('cart.index')
-                ->with('error', 'Alamat kamu di luar jangkauan pengiriman (maksimal '
-                    . config('apotek.radius_maksimum_km') . ' km).');
+                ->with('error', 'Alamat kamu di luar jangkauan pengiriman.');
         }
 
-        // Cek stok saat ini (informasional di halaman ini; validasi keras terjadi lagi di store())
-        $itemStokKurang = $cartItems->filter(fn ($item) => $item->quantity > $item->obat->stok);
-
-        if ($itemStokKurang->isNotEmpty()) {
-            $daftar = $itemStokKurang->map(fn ($item) => $item->obat->nama . ' (tersisa ' . $item->obat->stok . ')')->implode(', ');
-            return redirect()->route('cart.index')
-                ->with('error', 'Beberapa produk stoknya tidak mencukupi: ' . $daftar . '. Silakan sesuaikan jumlah di keranjang.');
-        }
-
-        $subtotal = $cartItems->sum(fn ($item) => $item->quantity * $item->obat->harga);
-
-        $butuhResep = $cartItems->contains(fn ($item) => $item->obat->perluResep());
-        $butuhKtp = $cartItems->contains(fn ($item) => (bool) $item->obat->butuh_ktp);
-
-        $summary = [
-            'item_count' => $cartItems->sum('quantity'),
-            'subtotal'   => $subtotal,
-            'jarak_km'   => $jarakKm,
-            'ongkir'     => $ongkir,
-            'total'      => $subtotal + $ongkir,
-        ];
-
-        return view('customer.checkout', compact('cartItems', 'summary', 'user', 'butuhResep', 'butuhKtp'));
+        return view('customer.checkout', [
+            'cartItems' => $cartItems,
+            'user'      => $user,
+            'summary'   => [
+                'subtotal' => $subtotal,
+                'ongkir'   => $ongkir,
+                'total'    => $subtotal + $ongkir,
+                'jarak_km' => $jarakKm,
+            ],
+        ]);
     }
 
-    /**
-     * POST /checkout — proses checkout: validasi ulang semua, simpan pesanan +
-     * detail_pesanan, kurangi stok, kosongkan keranjang, kirim notifikasi ke apoteker.
-     */
     public function store(Request $request)
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $cartItems = CartItem::with('obat')->where('user_id', $user->id)->get();
 
         if ($cartItems->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Keranjang kamu masih kosong.');
+            return redirect()->route('cart.index')->with('error', 'Keranjang kamu kosong.');
         }
 
-        $alamatLengkap = (bool) ($user->alamat && $user->latitude && $user->longitude);
-        if (! $alamatLengkap) {
+        if (!$user->alamat) {
             return redirect()->route('cart.index')->with('error', 'Lengkapi alamat pengiriman terlebih dahulu.');
         }
 
-        $butuhResep = $cartItems->contains(fn ($item) => $item->obat->perluResep());
-        $butuhKtp = $cartItems->contains(fn ($item) => (bool) $item->obat->butuh_ktp);
-
-        $rules = [
+        $validated = $request->validate([
             'metode_pembayaran' => ['required', 'in:cod,qris'],
             'catatan'           => ['nullable', 'string', 'max:1000'],
-        ];
-
-        if ($butuhResep) {
-            $rules['resep'] = ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'];
-        }
-        if ($butuhKtp) {
-            $rules['ktp'] = ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'];
-        }
-
-        $validated = $request->validate($rules, [
-            'resep.required' => 'Ada produk yang memerlukan resep dokter. Silakan unggah foto resep.',
-            'ktp.required'   => 'Ada produk yang memerlukan verifikasi KTP. Silakan unggah foto KTP.',
         ]);
 
-        try {
-            $pesanan = DB::transaction(function () use ($user, $cartItems, $validated, $request, $butuhResep, $butuhKtp) {
-                // Kunci baris obat yang terlibat supaya tidak ada dua checkout bersamaan
-                // lolos validasi stok yang sama (race condition).
-                $obatIds = $cartItems->pluck('obat_id')->all();
-                $obatTerkunci = Obat::whereIn('id', $obatIds)->lockForUpdate()->get()->keyBy('id');
+        // GANTI: pakai jarak_km yang sama dengan yang ditampilkan di halaman checkout
+        $jarakKm = $user->jarak_km ?? null;
+        $ongkir  = $this->hitungOngkir($jarakKm);
 
-                $errorStok = [];
-                foreach ($cartItems as $item) {
-                    $obat = $obatTerkunci->get($item->obat_id);
-                    if (! $obat || $item->quantity > $obat->stok) {
-                        $sisa = $obat->stok ?? 0;
-                        $errorStok[] = ($obat->nama ?? 'Produk') . " (diminta {$item->quantity}, tersisa {$sisa})";
-                    }
-                }
+        if (is_null($ongkir)) {
+            return redirect()->route('cart.index')->with('error', 'Alamat kamu di luar jangkauan pengiriman.');
+        }
 
-                if (! empty($errorStok)) {
-                    throw new \RuntimeException('Stok tidak mencukupi untuk: ' . implode(', ', $errorStok));
-                }
+        $requiresResep = $cartItems->contains(fn ($item) => $item->obat->perluResep());
 
-                // Hitung ulang jarak & ongkir dari data alamat terbaru user (jangan percaya input klien)
-                $jarakKm = DistanceCalculator::km(
-                    config('apotek.latitude'),
-                    config('apotek.longitude'),
-                    $user->latitude,
-                    $user->longitude
-                );
-                $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm);
+        $pesanan = DB::transaction(function () use ($user, $cartItems, $validated, $jarakKm, $ongkir) {
 
-                if ($ongkir === null) {
-                    throw new \RuntimeException('Alamat kamu di luar jangkauan pengiriman (maksimal '
-                        . config('apotek.radius_maksimum_km') . ' km).');
-                }
+            $totalHarga = $cartItems->sum(fn ($item) => $item->obat->harga * $item->quantity);
 
-                $subtotal = $cartItems->sum(fn ($item) => $item->quantity * $obatTerkunci->get($item->obat_id)->harga);
+            // Status awal SELALU 'menunggu_verifikasi', sama untuk pesanan biasa
+            // maupun pesanan yang butuh resep — konsisten dengan STATUS_MAP di
+            // PesananController dan dengan alur apoteker (terima/proses/dst).
+            // Kolom status_resep TIDAK diisi manual di sini: biarkan default
+            // 'tidak_perlu' dari migration. Begitu customer upload resep nanti
+            // di halaman detail pesanan, baru diubah jadi 'menunggu'.
+            $pesanan = Pesanan::create([
+                'user_id'           => $user->id,
+                'alamat'            => $user->alamat,
+                'jarak_km'          => $jarakKm,
+                'ongkir'            => $ongkir,
+                'metode_pembayaran' => $validated['metode_pembayaran'],
+                'catatan'           => $validated['catatan'] ?? null,
+                'status'            => 'menunggu_verifikasi',
+                'total_harga'       => $totalHarga,
+            ]);
 
-                $resepPath = $butuhResep ? $request->file('resep')->store('resep', 'public') : null;
-                $ktpPath = $butuhKtp ? $request->file('ktp')->store('ktp', 'public') : null;
-
-                $pesanan = Pesanan::create([
-                    'user_id'           => $user->id,
-                    'alamat'            => $user->alamat,
-                    'jarak_km'          => $jarakKm,
-                    'ongkir'            => $ongkir,
-                    'metode_pembayaran' => $validated['metode_pembayaran'],
-                    'catatan'           => $validated['catatan'] ?? null,
-                    'status'            => 'menunggu_verifikasi',
-                    'status_resep'      => ($butuhResep || $butuhKtp) ? 'menunggu' : 'tidak_perlu',
-                    'resep_path'        => $resepPath,
-                    'ktp_path'          => $ktpPath,
-                    'total_harga'       => $subtotal,
+            foreach ($cartItems as $item) {
+                DetailPesanan::create([
+                    'pesanan_id'   => $pesanan->id,
+                    'obat_id'      => $item->obat_id,
+                    'jumlah'       => $item->quantity,
+                    'harga_satuan' => $item->obat->harga,
                 ]);
 
-                foreach ($cartItems as $item) {
-                    $obat = $obatTerkunci->get($item->obat_id);
+                $item->obat->decrement('stok', $item->quantity);
+            }
 
-                    DetailPesanan::create([
-                        'pesanan_id'   => $pesanan->id,
-                        'obat_id'      => $obat->id,
-                        'jumlah'       => $item->quantity,
-                        'harga_satuan' => $obat->harga,
-                    ]);
+            CartItem::where('user_id', $user->id)->delete();
 
-                    $obat->decrement('stok', $item->quantity);
-                }
+            return $pesanan;
+        });
 
-                CartItem::where('user_id', $user->id)->delete();
+        $pesan = $requiresResep
+            ? 'Pesanan berhasil dibuat. Jangan lupa upload resep dokter di halaman detail pesanan ya.'
+            : 'Pesanan berhasil dibuat, menunggu konfirmasi apoteker.';
 
-                return $pesanan;
-            });
-        } catch (\RuntimeException $e) {
-            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        return redirect()->route('pesanan.detail', 'P' . str_pad((string) $pesanan->id, 3, '0', STR_PAD_LEFT))
+            ->with('success', $pesan);
+    }
+
+    private function hitungOngkir(?float $jarakKm): ?float
+    {
+        if (is_null($jarakKm)) {
+            return null;
         }
 
-        // Notifikasi ke semua apoteker aktif — di luar transaction, gagal kirim notifikasi
-        // tidak boleh membatalkan pesanan yang sudah tersimpan.
-        $kodePesanan = 'P' . str_pad($pesanan->id, 3, '0', STR_PAD_LEFT);
-        $apotekerAktif = User::where('role', 'apoteker')->where('is_active', true)->get();
-
-        foreach ($apotekerAktif as $apoteker) {
-            Notifikasi::create([
-                'user_id'    => $apoteker->id,
-                'pesanan_id' => $pesanan->id,
-                'judul'      => 'Pesanan Baru Masuk',
-                'pesan'      => 'Pesanan ' . $kodePesanan . ' dari ' . $user->name . ' menunggu diproses.'
-                    . ($pesanan->status_resep === 'menunggu' ? ' Perlu verifikasi resep/KTP.' : ''),
-            ]);
+        foreach (config('apotek.ongkir_tiers') as $tier) {
+            if ($jarakKm <= $tier['max_km']) {
+                return $tier['harga'];
+            }
         }
 
-        return redirect()->route('pesanan.detail', $kodePesanan)
-            ->with('success', 'Pesanan ' . $kodePesanan . ' berhasil dibuat. Apoteker kami akan segera memprosesnya.');
+        return null; // di luar radius_maksimum_km
     }
 }

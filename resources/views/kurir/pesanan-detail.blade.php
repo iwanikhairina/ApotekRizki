@@ -3,6 +3,8 @@
 @section('title', 'Detail Pesanan')
 
 @section('content')
+<link rel="stylesheet" href="{{ asset('vendor/leaflet/leaflet.css') }}">
+<script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
 <style>
     .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:600;margin-bottom:18px;}
     .back-link:hover{color:var(--mint-700);}
@@ -26,6 +28,11 @@
     .info-row .value{font-weight:600;color:var(--text-dark);text-align:right;}
 
     .maps-frame{width:100%;height:260px;border:none;border-radius:14px;margin-top:14px;}
+    #map{width:100%;height:320px;border-radius:14px;margin-top:14px;overflow:hidden;border:1px solid #d9efe7;background:#eef5f1;}
+    .maps-info{display:flex;gap:12px;margin-top:14px;}
+    .maps-card{flex:1;background:#F6FCF8;border-radius:12px;padding:12px;text-align:center;}
+    .maps-card span{display:block;font-size:12px;color:var(--text-muted);}
+    .maps-card strong{display:block;margin-top:4px;font-size:17px;color:var(--mint-700);}
     .maps-link{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);color:#3b82f6;text-decoration:none;font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:999px;transition:.15s ease;margin-top:10px;}
     .maps-link:hover{background:#dbeafe;}
 
@@ -113,11 +120,23 @@
     </span>
 </div>
 
-            @if ($pesanan->googleMapsEmbedUrl())
-                <iframe class="maps-frame" src="{{ $pesanan->googleMapsEmbedUrl() }}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div id="map"></div>
+
+            <div class="maps-info">
+                <div class="maps-card">
+                    <span>Jarak Pengiriman</span>
+                    <strong>{{ $pesanan->jarak_km ? number_format($pesanan->jarak_km, 2) . ' KM' : '-' }}</strong>
+                </div>
+                <div class="maps-card">
+                    <span>Estimasi</span>
+                    <strong>{{ $pesanan->hitungEstimasiMenit() }} Menit</strong>
+                </div>
+            </div>
+
+            @if ($pesanan->googleMapsDirectionUrl())
                 <a href="{{ $pesanan->googleMapsDirectionUrl() }}" target="_blank" class="maps-link">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Buka Rute di Aplikasi Google Maps
+                    Navigasi dengan Google Maps
                 </a>
             @endif
         </div>
@@ -190,4 +209,85 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var mapEl = document.getElementById('map');
+    if (!mapEl) return;
+
+    var originLat = {{ config('apotek.latitude') }};
+    var originLng = {{ config('apotek.longitude') }};
+    var destLat = {{ $pesanan->user->latitude ?? 'null' }};
+    var destLng = {{ $pesanan->user->longitude ?? 'null' }};
+
+    function showMapError(pesan) {
+        mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#7C8B84;font-size:12.5px;padding:16px;text-align:center;line-height:1.5;">' + pesan + '</div>';
+    }
+
+    function initMap() {
+        if (typeof L === 'undefined') {
+            showMapError('Peta gagal dimuat: library Leaflet tidak berhasil diakses dari CDN. Cek koneksi internet perangkat ini, atau nonaktifkan ad-blocker/ekstensi browser yang mungkin memblokir unpkg.com, lalu refresh halaman.');
+            return;
+        }
+
+        if (destLat === null || destLng === null) {
+            showMapError('Titik lokasi pelanggan belum tersedia untuk pesanan ini.');
+            return;
+        }
+
+        try {
+            var map = L.map('map', { zoomControl: true, scrollWheelZoom: false });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors',
+            }).addTo(map);
+
+            var origin = [originLat, originLng];
+            var destination = [destLat, destLng];
+
+            var apotekIcon = L.divIcon({
+                className: '',
+                html: '<div style="width:16px;height:16px;border-radius:50%;background:#16a34a;border:3px solid #fff;box-shadow:0 0 0 2px #16a34a;"></div>',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+            });
+
+            L.marker(origin, { icon: apotekIcon }).addTo(map).bindPopup('{{ config('apotek.nama') }}');
+            L.marker(destination).addTo(map).bindPopup('Lokasi Pelanggan');
+
+            map.fitBounds(L.latLngBounds([origin, destination]), { padding: [36, 36] });
+
+            requestAnimationFrame(function () { map.invalidateSize(); });
+            setTimeout(function () { map.invalidateSize(); }, 300);
+
+            // Gambar rute jalan sebenarnya (OSRM, data OpenStreetMap) supaya konsisten
+            // dengan jarak & estimasi waktu yang sudah dihitung di server. Kalau layanan
+            // rute gagal dihubungi, peta & marker tetap tampil, hanya garis rute yang
+            // jadi garis lurus putus-putus sebagai fallback.
+            fetch('https://router.project-osrm.org/route/v1/driving/' + originLng + ',' + originLat + ';' + destLng + ',' + destLat + '?overview=full&geometries=geojson')
+                .then(function (res) { return res.ok ? res.json() : Promise.reject(); })
+                .then(function (data) {
+                    var route = data.routes && data.routes[0];
+                    if (!route) return;
+                    var coords = route.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
+                    var routeLine = L.polyline(coords, { color: '#16a34a', weight: 5, opacity: 0.85 }).addTo(map);
+                    map.fitBounds(routeLine.getBounds(), { padding: [36, 36] });
+                })
+                .catch(function () {
+                    L.polyline([origin, destination], { color: '#16a34a', weight: 4, opacity: 0.6, dashArray: '8,8' }).addTo(map);
+                });
+        } catch (err) {
+            console.error('Gagal inisialisasi peta kurir:', err);
+            showMapError('Terjadi kesalahan saat memuat peta. Buka Console browser (F12) untuk detail error.');
+        }
+    }
+
+    if (document.readyState === 'complete') {
+        initMap();
+    } else {
+        window.addEventListener('load', initMap);
+    }
+})();
+</script>
 @endsection
