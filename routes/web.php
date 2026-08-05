@@ -25,7 +25,35 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\ObatController;
 use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Admin\LaporanController;
+use App\Http\Controllers\Admin\JadwalPengantaranController;
 use App\Http\Controllers\AlamatController;
+
+/*
+|--------------------------------------------------------------------------
+| Halaman Onboarding (landing pertama sebelum login)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/', function () {
+    // Kalau sudah login, langsung lempar ke dashboard sesuai role masing-masing
+    // daripada nampilin onboarding lagi.
+    if (auth()->check()) {
+        return match (auth()->user()->role) {
+            'owner'    => redirect()->route('admin.dashboard'),
+            'apoteker' => redirect()->route('apoteker.dashboard'),
+            'kurir'    => redirect()->route('kurir.dashboard'),
+            default    => redirect()->route('dashboard'),
+        };
+    }
+
+    return view('onboarding');
+})->name('onboarding');
+
+// Alias supaya bisa dibuka langsung buat preview/testing, tanpa perlu logout
+// dulu atau bentrok sama redirect otomatis di atas.
+Route::get('/onboarding', function () {
+    return view('onboarding');
+})->name('onboarding.preview');
 
 /*
 |--------------------------------------------------------------------------
@@ -147,6 +175,7 @@ Route::middleware('auth')->prefix('kurir')->name('kurir.')->group(function () {
     Route::post('/pesanan/{id}/ambil', [KurirPesananController::class, 'ambil'])->name('pesanan.ambil');
 
     Route::get('/pengiriman', [KurirPengirimanController::class, 'index'])->name('pengiriman');
+    Route::post('/pengiriman/mulai', [KurirPengirimanController::class, 'mulai'])->name('pengiriman.mulai');
     Route::post('/pengiriman/{id}/selesai', [KurirPengirimanController::class, 'selesai'])->name('pengiriman.selesai');
     Route::post('/pengiriman/{id}/batal', [KurirPengirimanController::class, 'batal'])->name('pengiriman.batal');
 
@@ -195,5 +224,13 @@ Route::prefix('admin')
 
         Route::prefix('laporan')->name('laporan.')->group(function () {
             Route::get('/', [LaporanController::class, 'index'])->name('index');
+        });
+
+        Route::prefix('jadwal-pengantaran')->name('jadwal-pengantaran.')->group(function () {
+            Route::get('/', [JadwalPengantaranController::class, 'index'])->name('index');
+            Route::post('/', [JadwalPengantaranController::class, 'store'])->name('store');
+            Route::put('/{jadwalPengantaran}', [JadwalPengantaranController::class, 'update'])->name('update');
+            Route::post('/{jadwalPengantaran}/toggle', [JadwalPengantaranController::class, 'toggle'])->name('toggle');
+            Route::delete('/{jadwalPengantaran}', [JadwalPengantaranController::class, 'destroy'])->name('destroy');
         });
 });

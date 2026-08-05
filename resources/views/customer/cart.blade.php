@@ -37,6 +37,18 @@
 
     .page-wrap{max-width:900px; margin:0 auto; padding:0 0 20px;}
 
+    /* ===== FLASH MESSAGES ===== */
+    .flash-success{
+        background:#E3F5EA; border:1px solid var(--mint-deep); color:var(--spring-deep);
+        padding:13px 16px; border-radius:14px; font-size:13.5px; font-weight:600;
+        margin:14px 14px 0;
+    }
+    .flash-error{
+        background:#FBE8E6; border:1px solid #f3c8c2; color:#B23A29;
+        padding:13px 16px; border-radius:14px; font-size:13.5px; font-weight:600;
+        margin:14px 14px 0;
+    }
+
     /* ===== ADDRESS BAR ===== */
     .address-bar{
         background:var(--white);
@@ -250,7 +262,7 @@
 
     @media (max-width:480px){
         .navbar-inner{padding:12px 16px;}
-        .address-bar, .warn-banner, .select-all-bar, .cart-group{margin-left:10px; margin-right:10px;}
+        .address-bar, .warn-banner, .select-all-bar, .cart-group, .flash-success, .flash-error{margin-left:10px; margin-right:10px;}
     }
 </style>
 </head>
@@ -269,6 +281,21 @@
 </nav>
 
 <div class="page-wrap">
+
+    {{-- ===== FLASH MESSAGES =====
+         SEBELUMNYA TIDAK ADA di halaman ini. Ini penyebab paling mungkin kenapa
+         tombol "Beli" terasa "tidak berfungsi": CheckoutController@show akan
+         redirect balik ke sini (route('cart.index')) dengan session('error')
+         kalau alamat belum lengkap atau ongkir tidak bisa dihitung (misal
+         $user->jarak_km null / di luar radius). Tanpa blok ini, redirect itu
+         terjadi diam-diam — halaman keranjang cuma "reload" tanpa pesan apa pun,
+         jadi kelihatan seperti tombolnya tidak melakukan apa-apa. --}}
+    @if (session('success'))
+        <div class="flash-success">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="flash-error">{{ session('error') }}</div>
+    @endif
 
     {{-- ===== ADDRESS BAR ===== --}}
     <div class="address-bar">
@@ -296,13 +323,13 @@
         </div>
     @endif
 
-    {{-- ===== WARNING: di luar jangkauan (>18km) ===== --}}
+    {{-- ===== WARNING: di luar area kecamatan yang dilayani ===== --}}
     @if($alamatLengkap && !$summary['bisa_diantar'])
         <div class="warn-banner">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
             <div class="warn-body">
                 <b>Maaf, alamat kamu di luar jangkauan pengiriman</b>
-                Jarak alamat kamu sekitar {{ number_format($summary['jarak_km'], 1) }} km dari apotek. Kami hanya melayani pengiriman hingga radius {{ config('apotek.radius_maksimum_km') }} km (sekitar Kec. Bebesen, Kebayakan, Pegasing, dan Danau Laut Tawar). Silakan <a href="{{ route('alamat.create') }}">ganti ke alamat yang lebih dekat</a>.
+                Saat ini pengantaran hanya melayani Kecamatan {{ implode(', ', \App\Support\DistanceCalculator::kecamatanDilayani()) }}. Silakan <a href="{{ route('alamat.create') }}">ganti ke alamat yang berada di area tersebut</a>.
             </div>
         </div>
     @endif
@@ -336,7 +363,7 @@
             </div>
 
             @foreach($cartItems as $item)
-                <div class="cart-item" data-cart-item-id="{{ $item->id }}" data-item-price="{{ $item->obat->harga }}">
+                <div class="cart-item" data-cart-item-id="{{ $item->id }}" data-item-price="{{ $item->obat->harga ?? 0 }}">
                     <div class="item-thumb">
                         @if($item->obat->image ?? false)
                             <img src="{{ Storage::url($item->obat->image) }}" alt="{{ $item->obat->nama }}">
@@ -345,9 +372,9 @@
                         @endif
                     </div>
                     <div class="item-body">
-                        <div class="item-name">{{ $item->obat->nama }}</div>
+                        <div class="item-name">{{ $item->obat->nama ?? 'Produk tidak ditemukan' }}</div>
                         <div class="item-unit">Per {{ $item->obat->satuan ?? 'item' }}</div>
-                        <div class="item-price">Rp{{ number_format($item->obat->harga, 0, ',', '.') }}</div>
+                        <div class="item-price">Rp{{ number_format($item->obat->harga ?? 0, 0, ',', '.') }}</div>
                         <div class="item-footer">
                             <a href="#" class="note-link">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05 12.25 20.24a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.67 3.67 0 0 1 5.19 5.19L9.66 17.65a1.83 1.83 0 0 1-2.6-2.6l8.49-8.49"/></svg>
@@ -386,7 +413,7 @@
             <span class="ongkir-note">Ongkir dihitung setelah alamat diisi</span>
         @endif
     </div>
-    <button class="beli-btn" id="beliBtn" {{ (!$alamatLengkap || !$summary['bisa_diantar']) ? 'disabled' : '' }}>
+    <button type="button" class="beli-btn" id="beliBtn" {{ (!$alamatLengkap || !$summary['bisa_diantar']) ? 'disabled' : '' }}>
         Beli
     </button>
 </div>
@@ -395,13 +422,35 @@
 <script>
 (function(){
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // ===== TOMBOL "BELI" =====
+    // Dipasang paling awal supaya tidak terpengaruh error di bagian script
+    // lain. type="button" ditambahkan di HTML supaya tombol ini TIDAK
+    // pernah dianggap submit button kalau suatu saat markup di atasnya
+    // berubah jadi ada <form>-nya.
+    const beliBtn = document.getElementById('beliBtn');
+    if (beliBtn) {
+        beliBtn.addEventListener('click', function () {
+            if (beliBtn.disabled) return;
+            beliBtn.disabled = true;
+            beliBtn.textContent = 'Memproses...';
+            window.location.href = '{{ route('checkout.show') }}';
+        });
+    }
+
     const subtotalPerItem = {};
 
     document.querySelectorAll('.cart-item').forEach(el => {
-        subtotalPerItem[el.dataset.cartItemId] = {
-            price: parseFloat(el.dataset.itemPrice),
-            qty: parseInt(el.querySelector('.qty-val').textContent, 10),
-        };
+        const qtyEl = el.querySelector('.qty-val');
+        const price = parseFloat(el.dataset.itemPrice);
+        const qty = qtyEl ? parseInt(qtyEl.textContent, 10) : NaN;
+
+        // Item dengan data harga/qty tidak valid (mis. produk sudah
+        // dihapus dari database) dilewati saja, tidak menghentikan
+        // seluruh script seperti sebelumnya.
+        if (!isNaN(price) && !isNaN(qty)) {
+            subtotalPerItem[el.dataset.cartItemId] = { price, qty };
+        }
     });
 
     const ongkir = {{ $summary['ongkir'] ?? 0 }};
@@ -468,13 +517,6 @@
             });
         });
     });
-
-    const beliBtn = document.getElementById('beliBtn');
-    if(beliBtn){
-        beliBtn.addEventListener('click', () => {
-            window.location.href = '{{ route('checkout.show') }}';
-        });
-    }
 })();
 </script>
 

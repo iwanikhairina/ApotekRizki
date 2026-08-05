@@ -10,6 +10,9 @@ class DistanceCalculator
 {
     /**
      * Hitung jarak garis lurus (Haversine) antara dua titik koordinat, dalam km.
+     * Sekarang HANYA dipakai sebagai fallback internal saat OSRM tidak bisa
+     * diakses (lihat route()) — jarak yang dipakai untuk ongkir, estimasi
+     * waktu, dsb tetap harus lewat route() supaya berbasis jarak jalan.
      */
     public static function km(float $lat1, float $lng1, float $lat2, float $lng2): float
     {
@@ -28,10 +31,14 @@ class DistanceCalculator
     }
 
     /**
-     * Hitung jarak & estimasi waktu tempuh JALAN SEBENARNYA (bukan garis lurus)
-     * antara dua titik koordinat, memakai data routing OpenStreetMap (OSRM) —
-     * sumber data yang sama dipakai untuk peta pemilihan alamat customer,
-     * supaya jarak & estimasi kurir konsisten dengan yang dilihat customer.
+     * Hitung jarak tempuh JALAN SEBENARNYA (bukan garis lurus) antara dua
+     * titik koordinat, memakai data routing OpenStreetMap (OSRM) — sumber
+     * data yang sama dipakai untuk peta pemilihan alamat customer, supaya
+     * jarak, ongkir, dan estimasi kurir konsisten dengan yang dilihat customer.
+     *
+     * Estimasi waktu TIDAK diambil dari durasi mentah OSRM, melainkan selalu
+     * dihitung dari tabel estimasi tetap berdasarkan jarak hasil rute
+     * (lihat estimasiMenitUntukJarak), supaya konsisten di seluruh sistem.
      *
      * Return: ['jarak_km' => float, 'estimasi_menit' => int, 'sumber' => string]
      */
@@ -54,10 +61,12 @@ class DistanceCalculator
                 if ($response->successful()) {
                     $route = $response->json('routes.0');
 
-                    if ($route && isset($route['distance'], $route['duration'])) {
+                    if ($route && isset($route['distance'])) {
+                        $jarakKm = round($route['distance'] / 1000, 2);
+
                         return [
-                            'jarak_km'       => round($route['distance'] / 1000, 2),
-                            'estimasi_menit' => (int) max(1, round($route['duration'] / 60)),
+                            'jarak_km'       => $jarakKm,
+                            'estimasi_menit' => self::estimasiMenitUntukJarak($jarakKm),
                             'sumber'         => 'rute',
                         ];
                     }
@@ -70,36 +79,113 @@ class DistanceCalculator
                 Log::warning('OSRM tidak bisa diakses, pakai fallback Haversine: ' . $e->getMessage());
             }
 
-            // Fallback: Haversine + asumsi kecepatan 25 km/jam (sama seperti logika lama)
+            // Fallback: Haversine (garis lurus). Estimasi waktu tetap memakai
+            // tabel estimasi yang sama supaya konsisten walau sumber jaraknya
+            // sedang fallback.
             $jarakKm = self::km($lat1, $lng1, $lat2, $lng2);
-            $menit = max(10, round(($jarakKm / 25) * 60));
 
             return [
                 'jarak_km'       => $jarakKm,
-                'estimasi_menit' => (int) $menit,
+                'estimasi_menit' => self::estimasiMenitUntukJarak($jarakKm),
                 'sumber'         => 'haversine_fallback',
             ];
         });
     }
 
     /**
-     * Ongkir bertingkat berdasarkan jarak (km), sesuai config/apotek.php.
-     * Return null kalau di luar jangkauan (tidak bisa dilayani).
+     * Ongkos kirim otomatis berdasarkan jarak tempuh jalan (km):
+     * - Jarak <= 0,5 km: gratis (Rp0)
+     * - Setelah 0,5 km, setiap kelipatan 0,5 km berikutnya (dibulatkan ke
+     *   atas) dikenakan Rp3.000. Contoh: 0,5 km = Rp0; 0,5-1 km = Rp3.000;
+     *   1-1,5 km = Rp6.000; 1,5-2 km = Rp9.000; dst.
+     * Tidak ada batas jarak maksimum di sini — area layanan divalidasi
+     * secara terpisah berdasarkan kecamatan (lihat areaDilayani()).
      */
-    public static function ongkirUntukJarak(float $jarakKm): ?float
+    public static function ongkirUntukJarak(float $jarakKm): float
     {
-        $radiusMax = config('apotek.radius_maksimum_km');
+        $gratisHinggaKm = (float) config('apotek.ongkir_gratis_hingga_km', 0.5);
 
-        if ($jarakKm > $radiusMax) {
-            return null;
+        if ($jarakKm <= $gratisHinggaKm) {
+            return 0;
         }
 
-        foreach (config('apotek.ongkir_tiers') as $tier) {
-            if ($jarakKm <= $tier['max_km']) {
-                return $tier['harga'];
+        $stepKm = (float) config('apotek.ongkir_per_step_km', 0.5);
+        $hargaPerStep = (float) config('apotek.ongkir_per_step_harga', 3000);
+
+        $jumlahStep = (int) ceil(($jarakKm - $gratisHinggaKm) / $stepKm);
+
+        return $jumlahStep * $hargaPerStep;
+    }
+
+    /**
+     * Estimasi waktu pengantaran (menit) berdasarkan tabel tetap:
+     * 0,5 km = 1 menit, 1 km = 2 menit, 2 km = 4 menit, ... 18 km = 36 menit
+     * (rasio 2 menit per km, dibulatkan, minimum 1 menit).
+     */
+    public static function estimasiMenitUntukJarak(?float $jarakKm): int
+    {
+        if (! $jarakKm) {
+            return 0;
+        }
+
+        return (int) max(1, round($jarakKm * 2));
+    }
+
+    /**
+     * Daftar kecamatan yang dilayani. Diambil dari config('apotek.kecamatan_dilayani'),
+     * TAPI dengan fallback hardcode di sini juga — supaya kalau config sempat
+     * ke-cache versi lama (mis. lupa jalankan `php artisan config:clear`
+     * setelah update), validasi area tetap jalan benar dan tidak
+     * menolak semua alamat begitu saja.
+     */
+    private const KECAMATAN_DILAYANI_DEFAULT = ['Kebayakan', 'Bebesen', 'Pegasing', 'Lut Tawar'];
+
+    public static function kecamatanDilayani(): array
+    {
+        $daftar = config('apotek.kecamatan_dilayani');
+
+        return is_array($daftar) && count($daftar) > 0
+            ? $daftar
+            : self::KECAMATAN_DILAYANI_DEFAULT;
+    }
+
+    /**
+     * Cek apakah sebuah nama kecamatan termasuk area yang dilayani
+     * pengantaran Apotek Rizki (lihat kecamatanDilayani()).
+     * Perbandingan tidak peka besar-kecil huruf, mengabaikan prefix
+     * "Kec."/"Kecamatan", dan cukup "mengandung" nama kecamatannya —
+     * supaya teks alamat yang lebih panjang dari hasil reverse-geocode
+     * (mis. "Kecamatan Bebesen, Aceh Tengah" atau "Bebesen, Aceh Tengah")
+     * tetap terdeteksi, tidak cuma exact match.
+     */
+    public static function areaDilayani(?string $kecamatan): bool
+    {
+        $normalisasi = self::normalisasiKecamatan($kecamatan);
+
+        if ($normalisasi === '') {
+            return false;
+        }
+
+        foreach (self::kecamatanDilayani() as $kecamatanDilayani) {
+            $target = self::normalisasiKecamatan($kecamatanDilayani);
+
+            if ($target !== '' && (
+                $normalisasi === $target
+                || str_contains($normalisasi, $target)
+                || str_contains($target, $normalisasi)
+            )) {
+                return true;
             }
         }
 
-        return null;
+        return false;
+    }
+
+    private static function normalisasiKecamatan(?string $kecamatan): string
+    {
+        $kecamatan = strtolower(trim((string) $kecamatan));
+        $kecamatan = preg_replace('/^kec(amatan)?\.?\s+/', '', $kecamatan);
+
+        return trim($kecamatan);
     }
 }

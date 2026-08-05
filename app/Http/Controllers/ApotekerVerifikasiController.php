@@ -141,19 +141,21 @@ class ApotekerVerifikasiController extends Controller
             return;
         }
 
-        $jarakKm = DistanceCalculator::km(
+        $rute = DistanceCalculator::route(
             config('apotek.latitude'),
             config('apotek.longitude'),
             $user->latitude,
             $user->longitude
         );
 
+        $jarakKm = $rute['jarak_km'];
         $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm);
 
         $pesanan->update([
-            'alamat'   => $user->alamat,
-            'jarak_km' => $jarakKm,
-            'ongkir'   => $ongkir,
+            'alamat'         => $user->alamat,
+            'jarak_km'       => $jarakKm,
+            'ongkir'         => $ongkir,
+            'estimasi_menit' => $rute['estimasi_menit'],
         ]);
     }
 

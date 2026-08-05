@@ -70,14 +70,15 @@ class ResepController extends Controller
 $ongkir  = 0;
 
 if ($user->alamat && $user->latitude && $user->longitude) {
-    $jarakKm = DistanceCalculator::km(
+    $rute = DistanceCalculator::route(
         config('apotek.latitude'),
         config('apotek.longitude'),
         $user->latitude,
         $user->longitude
     );
 
-    $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm) ?? 0;
+    $jarakKm = $rute['jarak_km'];
+    $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm);
 }
         Pesanan::create([
             'user_id'      => $user->id,

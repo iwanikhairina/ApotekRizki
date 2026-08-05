@@ -69,6 +69,37 @@
     </div>
 </div>
 
+@php
+    $roleSekarang = old('role', $isEdit ? $staff->role : '');
+    $jamMulaiValue = old('jam_antar_mulai', $isEdit && $staff->jam_antar_mulai ? \Carbon\Carbon::parse($staff->jam_antar_mulai)->format('H:i') : '');
+    $jamSelesaiValue = old('jam_antar_selesai', $isEdit && $staff->jam_antar_selesai ? \Carbon\Carbon::parse($staff->jam_antar_selesai)->format('H:i') : '');
+@endphp
+
+<div id="jamAntarWrapper" style="display:{{ $roleSekarang === 'kurir' ? 'grid' : 'none' }}; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; background:var(--mint-50); padding:14px; border-radius:12px;">
+    <div>
+        <label style="display:block; font-size:0.82rem; font-weight:600; color:var(--ink-700); margin-bottom:6px;">Jam Antar Mulai</label>
+        <input type="time" name="jam_antar_mulai" value="{{ $jamMulaiValue }}"
+            style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--mint-100); font-size:0.9rem;">
+        <p style="font-size:0.75rem; color:var(--ink-500); margin-top:4px;">Kurir hanya menerima pesanan batch otomatis di jam ini.</p>
+    </div>
+    <div>
+        <label style="display:block; font-size:0.82rem; font-weight:600; color:var(--ink-700); margin-bottom:6px;">Jam Antar Selesai</label>
+        <input type="time" name="jam_antar_selesai" value="{{ $jamSelesaiValue }}"
+            style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--mint-100); font-size:0.9rem;">
+    </div>
+</div>
+
+<script>
+    (function () {
+        var roleSelect = document.querySelector('select[name="role"]');
+        var wrapper = document.getElementById('jamAntarWrapper');
+        if (!roleSelect || !wrapper) return;
+        roleSelect.addEventListener('change', function () {
+            wrapper.style.display = this.value === 'kurir' ? 'grid' : 'none';
+        });
+    })();
+</script>
+
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:6px;">
     <div>
         <label style="display:block; font-size:0.82rem; font-weight:600; color:var(--ink-700); margin-bottom:6px;">

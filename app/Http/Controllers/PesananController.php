@@ -64,6 +64,11 @@ class PesananController extends Controller
         $etaAt = $pesanan->estimasiSelesaiAt();
         $sisaMenit = $etaAt ? max(0, (int) round(now()->diffInMinutes($etaAt, false))) : null;
 
+        // Jadwal pengantaran yang DIPILIH customer sendiri saat checkout
+        // (snapshot tersimpan di kolom jadwal_antar_mulai/selesai), bukan
+        // lagi dihitung otomatis dari jam kurir.
+        $jadwalPengantaranLabel = $pesanan->jadwalPengantaranLabel();
+
         $kurir = null;
         if ($pesanan->kurir_id && $pesanan->kurir) {
             $kurir = [
@@ -92,6 +97,8 @@ class PesananController extends Controller
             'shipping_cost'        => (float) $pesanan->ongkir,
             'eta_at'               => $etaAt,
             'sisa_menit'           => $sisaMenit,
+            'jadwal_pengantaran_label' => $jadwalPengantaranLabel,
+            'jadwal_popup_show'    => false, // di-set true khusus di method show()
             'items'                => $items,
             'kurir'                => $kurir,
         ];
@@ -123,6 +130,16 @@ class PesananController extends Controller
         }
 
         $order = $this->toOrderArray($pesanan);
+
+        // Pop-up info jadwal pengantaran HANYA muncul sekali: otomatis
+        // setelah pesanan berhasil dibuat, atau saat pertama kali customer
+        // membuka halaman Detail Pesanan ini. Kunjungan berikutnya tidak
+        // akan memicu pop-up lagi, tapi info jadwal tetap tampil permanen
+        // di bagian "Jadwal Pengantaran" pada halaman ini.
+        if ($pesanan->punyaJadwalPengantaran() && ! $pesanan->jadwal_popup_shown) {
+            $order['jadwal_popup_show'] = true;
+            $pesanan->update(['jadwal_popup_shown' => true]);
+        }
 
         return view('customer.pesanan-detail', ['order' => $order]);
     }

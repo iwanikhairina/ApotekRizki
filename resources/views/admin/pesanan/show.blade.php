@@ -79,6 +79,9 @@
                 <div style="display:flex; flex-direction:column; gap:8px; font-size:0.86rem;">
                     <div><span style="color:var(--ink-500);">Alamat:</span> {{ $pesanan->alamat }}</div>
                     <div><span style="color:var(--ink-500);">Metode Pembayaran:</span> {{ strtoupper($pesanan->metode_pembayaran ?? '-') }}</div>
+                    @if($pesanan->jadwalPengantaranLabel())
+                        <div><span style="color:var(--ink-500);">Jadwal Pengantaran:</span> <strong style="color:var(--spring-deep);">{{ $pesanan->jadwalPengantaranLabel() }}</strong></div>
+                    @endif
                     @if($pesanan->catatan)
                         <div><span style="color:var(--ink-500);">Catatan:</span> {{ $pesanan->catatan }}</div>
                     @endif

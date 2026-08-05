@@ -159,6 +159,13 @@
         <div class="flash-error">{{ session('error') }}</div>
     @endif
 
+    @if ($jadwalOptions->isNotEmpty())
+        <div class="jadwal-notice-inline" style="background:#EAF7F0; border:1px solid #D3EFE0; color:#0C7E57; padding:12px 16px; border-radius:14px; font-size:12.5px; font-weight:600; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>Pilih jadwal pengantaran yang kamu inginkan di bawah supaya kamu tahu perkiraan waktu kedatangan pesanan.</span>
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" id="checkoutForm">
         @csrf
 
@@ -226,6 +233,31 @@
 
             @error('metode_pembayaran')<div class="flash-error" style="margin-top:8px;">{{ $message }}</div>@enderror
         </div>
+
+        {{-- ===== JADWAL PENGANTARAN ===== --}}
+        @if ($jadwalOptions->isNotEmpty())
+            <div class="card">
+                <div class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    Jadwal Pengantaran
+                </div>
+
+                @foreach ($jadwalOptions as $jadwal)
+                    <label class="pay-option">
+                        <input type="radio" name="jadwal_pengantaran_id" value="{{ $jadwal->id }}" {{ $loop->first ? 'checked' : '' }} required>
+                        <div class="pay-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        </div>
+                        <div class="pay-info">
+                            <span>{{ $jadwal->label }}</span>
+                            <small>Estimasi kurir mengantar pada rentang waktu ini</small>
+                        </div>
+                    </label>
+                @endforeach
+
+                @error('jadwal_pengantaran_id')<div class="flash-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+            </div>
+        @endif
 
         {{-- ===== UPLOAD RESEP (kondisional) ===== --}}
         @if($requiresResep)

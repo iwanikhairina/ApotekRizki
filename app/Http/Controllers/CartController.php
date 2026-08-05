@@ -25,15 +25,22 @@ class CartController extends Controller
         $alamatLengkap = $user->alamat && $user->latitude && $user->longitude;
 
         if ($alamatLengkap) {
-            $jarakKm = DistanceCalculator::km(
+            $rute = DistanceCalculator::route(
                 config('apotek.latitude'),
                 config('apotek.longitude'),
                 $user->latitude,
                 $user->longitude
             );
 
+            $jarakKm = $rute['jarak_km'];
             $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm);
-            $bisaDiantar = $ongkir !== null;
+
+            // Area layanan sekarang divalidasi berdasarkan kecamatan (bukan
+            // radius jarak). Alamat baru sudah dicegah tersimpan kalau di
+            // luar area lewat AlamatController, tapi dicek ulang di sini
+            // untuk berjaga-jaga terhadap alamat lama yang tersimpan
+            // sebelum validasi ini ada.
+            $bisaDiantar = DistanceCalculator::areaDilayani($user->kecamatan);
         }
 
         $summary = [

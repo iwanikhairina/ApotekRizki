@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\DistanceCalculator;
 use Illuminate\Database\Eloquent\Model;
 
 class Pesanan extends Model
@@ -12,26 +13,25 @@ class Pesanan extends Model
         'user_id', 'kurir_id', 'alamat', 'jarak_km', 'ongkir', 'metode_pembayaran',
         'catatan', 'catatan_apoteker', 'status', 'alasan_batal', 'waktu_diambil', 'estimasi_menit',
         'resep_path', 'ktp_path', 'status_resep', 'total_harga',
+        'pengiriman_batch_id', 'urutan_pengiriman', 'jarak_leg_km', 'estimasi_leg_menit',
+        'jadwal_pengantaran_id', 'jadwal_antar_mulai', 'jadwal_antar_selesai', 'jadwal_popup_shown',
     ];
 
     protected $casts = [
-        'waktu_diambil' => 'datetime',
+        'waktu_diambil'       => 'datetime',
+        'jadwal_popup_shown'  => 'boolean',
     ];
 
     /**
-     * Estimasi waktu tempuh (menit), dihitung langsung dari jarak (km) —
-     * rasio 2 menit per km (≈ kecepatan rata-rata kurir 30 km/jam):
-     * 0,5 km → 1 menit, 5 km → 10 menit, 12 km → 24 menit, 18 km → 36 menit, dst.
+     * Estimasi waktu tempuh (menit), berdasarkan tabel estimasi tetap
+     * di DistanceCalculator (rasio 2 menit per km): 0,5 km -> 1 menit,
+     * 5 km -> 10 menit, 12 km -> 24 menit, 18 km -> 36 menit, dst.
      * Selalu dihitung ulang dari jarak_km (tidak lagi terpaku ke nilai lama
      * yang mungkin sudah tersimpan di kolom estimasi_menit).
      */
     public function hitungEstimasiMenit(): int
     {
-        if (! $this->jarak_km) {
-            return 0;
-        }
-
-        return (int) max(1, round($this->jarak_km * 2));
+        return DistanceCalculator::estimasiMenitUntukJarak($this->jarak_km);
     }
 
     public function estimasiSelesaiAt(): ?\Carbon\Carbon
@@ -56,6 +56,42 @@ class Pesanan extends Model
     public function detailPesanan()
     {
         return $this->hasMany(DetailPesanan::class);
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(PengirimanBatch::class, 'pengiriman_batch_id');
+    }
+
+    public function jadwalPengantaran()
+    {
+        return $this->belongsTo(JadwalPengantaran::class, 'jadwal_pengantaran_id');
+    }
+
+    /**
+     * True kalau pesanan ini punya jadwal pengantaran yang tersimpan
+     * (dipilih customer saat checkout).
+     */
+    public function punyaJadwalPengantaran(): bool
+    {
+        return ! empty($this->jadwal_antar_mulai) && ! empty($this->jadwal_antar_selesai);
+    }
+
+    /**
+     * Label siap tampil dari jadwal yang TERSIMPAN di pesanan ini
+     * (snapshot saat checkout), bukan dihitung ulang dari master data —
+     * supaya histori pesanan tetap akurat walau owner mengubah/menghapus
+     * slot master-nya nanti. Contoh: "10.00 - 11.00 WIB".
+     */
+    public function jadwalPengantaranLabel(): ?string
+    {
+        if (! $this->punyaJadwalPengantaran()) {
+            return null;
+        }
+
+        return JadwalPengantaran::formatJam($this->jadwal_antar_mulai)
+            . ' - ' . JadwalPengantaran::formatJam($this->jadwal_antar_selesai)
+            . ' WIB';
     }
 
     public function butuhVerifikasiKhusus(): bool
@@ -86,18 +122,19 @@ class Pesanan extends Model
         return ! empty($this->resep_path);
     }
 
+    /**
+     * Ongkir otomatis berdasarkan jarak (km) tempuh jalan, memakai formula
+     * tetap di DistanceCalculator (gratis <= 0,5 km, lalu +Rp3.000 setiap
+     * kelipatan 0,5 km). Tidak ada batas jarak di sini — area layanan
+     * divalidasi terpisah berdasarkan kecamatan (lihat DistanceCalculator::areaDilayani()).
+     */
     public function hitungOngkirOtomatis(): ?float
     {
         if (is_null($this->jarak_km)) {
             return null;
         }
 
-        return match(true) {
-            $this->jarak_km <= 5   => 0,
-            $this->jarak_km <= 10  => 5000,
-            $this->jarak_km <= 15  => 10000,
-            default                => null, // di luar jangkauan, tidak dilayani otomatis
-        };
+        return DistanceCalculator::ongkirUntukJarak($this->jarak_km);
     }
 
     public function ongkirLabel(): string
@@ -106,12 +143,13 @@ class Pesanan extends Model
             return 'Jarak belum diatur';
         }
 
-        return match(true) {
-            $this->jarak_km <= 5   => 'Gratis Ongkir (0-5 km)',
-            $this->jarak_km <= 10  => 'Rp5.000 - Rp10.000 (5-10 km)',
-            $this->jarak_km <= 15  => 'Rp10.000 - Rp15.000 (10-15 km)',
-            default                => 'Di luar jangkauan (>15 km) — sesuai ketersediaan kurir',
-        };
+        $ongkir = $this->ongkir ?? DistanceCalculator::ongkirUntukJarak($this->jarak_km);
+
+        if ($ongkir <= 0) {
+            return 'Gratis Ongkir (jarak ' . number_format($this->jarak_km, 1) . ' km)';
+        }
+
+        return 'Rp' . number_format($ongkir, 0, ',', '.') . ' (jarak ' . number_format($this->jarak_km, 1) . ' km)';
     }
 
     public function totalKeseluruhan(): float

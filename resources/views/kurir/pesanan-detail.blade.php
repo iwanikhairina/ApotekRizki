@@ -109,6 +109,12 @@
                 <span class="label">Metode Pembayaran</span>
                 <span class="value">{{ $pesanan->metode_pembayaran ?? '-' }}</span>
             </div>
+            @if ($pesanan->jadwalPengantaranLabel())
+                <div class="info-row">
+                    <span class="label">Jadwal Pengantaran</span>
+                    <span class="value" style="color:var(--mint-700);">{{ $pesanan->jadwalPengantaranLabel() }}</span>
+                </div>
+            @endif
             <div class="info-row">
     <span class="label">Estimasi Waktu Tempuh</span>
     <span class="value" style="color:var(--mint-700);">

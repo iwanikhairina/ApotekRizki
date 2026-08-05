@@ -49,21 +49,15 @@ class AlamatController extends Controller
             'label_alamat'    => 'nullable|string|max:50',
         ]);
 
-        $jarakKm = DistanceCalculator::km(
-            config('apotek.latitude'),
-            config('apotek.longitude'),
-            $validated['latitude'],
-            $validated['longitude']
-        );
+        // Validasi area layanan berdasarkan wilayah administrasi (kecamatan),
+        // bukan lagi berdasarkan radius jarak. Hanya alamat yang berada di
+        // salah satu kecamatan yang dilayani yang bisa diproses.
+        if (! DistanceCalculator::areaDilayani($validated['kecamatan'])) {
+            $kecamatanDilayani = implode(', ', DistanceCalculator::kecamatanDilayani());
 
-        $radiusMax = config('apotek.radius_maksimum_km');
-
-        if ($jarakKm > $radiusMax) {
             return back()->withInput()->withErrors([
-                'lokasi' => 'Maaf, alamat ini berjarak sekitar ' . number_format($jarakKm, 1)
-                    . ' km dari apotek, di luar jangkauan layanan kami (maksimal ' . $radiusMax
-                    . ' km, area Kec. Bebesen, Kebayakan, Pegasing, dan sekitar Danau Laut Tawar). '
-                    . 'Silakan pilih titik lokasi lain yang lebih dekat.',
+                'lokasi' => 'Maaf, alamat yang Anda pilih berada di luar area layanan Apotek Rizki. '
+                    . 'Saat ini pengantaran hanya melayani Kecamatan ' . $kecamatanDilayani . '.',
             ]);
         }
 

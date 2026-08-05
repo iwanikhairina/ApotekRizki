@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CartItem;
 use App\Models\DetailPesanan;
+use App\Models\JadwalPengantaran;
 use App\Models\Pesanan;
 use App\Support\DistanceCalculator;
 use Illuminate\Http\Request;
@@ -33,31 +34,30 @@ class CheckoutController extends Controller
                 ->with('error', 'Lengkapi alamat pengiriman terlebih dahulu.');
         }
 
+        // Area layanan divalidasi berdasarkan kecamatan. Alamat baru sudah
+        // dicegah tersimpan kalau di luar area lewat AlamatController, tapi
+        // dicek ulang di sini untuk berjaga-jaga terhadap alamat lama yang
+        // tersimpan sebelum validasi ini ada.
+        if (! DistanceCalculator::areaDilayani($user->kecamatan)) {
+            $kecamatanDilayani = implode(', ', DistanceCalculator::kecamatanDilayani());
+
+            return redirect()->route('cart.index')->with('error',
+                'Maaf, alamat pengiriman kamu berada di luar area layanan Apotek Rizki. '
+                . 'Saat ini pengantaran hanya melayani Kecamatan ' . $kecamatanDilayani . '.'
+            );
+        }
+
         $subtotal = $cartItems->sum(fn ($item) => $item->obat->harga * $item->quantity);
 
-        $jarakKm = DistanceCalculator::km(
+        $rute = DistanceCalculator::route(
             config('apotek.latitude'),
             config('apotek.longitude'),
             $user->latitude,
             $user->longitude
         );
 
+        $jarakKm = $rute['jarak_km'];
         $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm);
-
-        // SEMENTARA: jangan blokir checkout kalau ongkir gagal dihitung
-        // (jarak null / di luar tier). Pakai ongkir tier tertinggi sebagai
-        // fallback aman, dan catat di log supaya nanti kita cek kenapa
-        // perhitungan jaraknya bisa null/di luar jangkauan.
-        if (is_null($ongkir)) {
-            \Illuminate\Support\Facades\Log::warning('Ongkir fallback dipakai saat checkout.', [
-                'user_id'  => $user->id,
-                'jarak_km' => $jarakKm,
-                'lat'      => $user->latitude,
-                'lng'      => $user->longitude,
-            ]);
-
-            $ongkir = collect(config('apotek.ongkir_tiers'))->last()['harga'] ?? 15000;
-        }
 
         // BARU: checkout.blade.php pakai $requiresResep dan $kerasItems untuk
         // menampilkan kartu upload resep, tapi sebelumnya kedua variabel ini
@@ -67,11 +67,16 @@ class CheckoutController extends Controller
         $kerasItems = $cartItems->filter(fn ($item) => $item->obat->perluResep());
         $requiresResep = $kerasItems->isNotEmpty();
 
+        // Jadwal pengantaran yang sudah diatur OWNER (Panel Owner > Jadwal
+        // Antar). Hanya slot yang aktif yang ditampilkan sebagai pilihan.
+        $jadwalOptions = JadwalPengantaran::aktif()->urut()->get();
+
         return view('customer.checkout', [
             'cartItems'      => $cartItems,
             'user'           => $user,
             'requiresResep'  => $requiresResep,
             'kerasItems'     => $kerasItems,
+            'jadwalOptions'  => $jadwalOptions,
             'summary'        => [
                 'subtotal' => $subtotal,
                 'ongkir'   => $ongkir,
@@ -97,39 +102,55 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Lengkapi alamat pengiriman terlebih dahulu.');
         }
 
+        // Jadwal pengantaran wajib dipilih HANYA kalau owner memang sudah
+        // mengatur minimal satu slot aktif. Kalau belum ada slot sama sekali,
+        // fitur ini belum "aktif" dipakai toko dan checkout tetap jalan normal.
+        $adaJadwalAktif = JadwalPengantaran::aktif()->exists();
+
         $validated = $request->validate([
-            'metode_pembayaran' => ['required', 'in:cod,qris'],
-            'catatan'           => ['nullable', 'string', 'max:1000'],
+            'metode_pembayaran'      => ['required', 'in:cod,qris'],
+            'catatan'                => ['nullable', 'string', 'max:1000'],
+            'jadwal_pengantaran_id'  => [$adaJadwalAktif ? 'required' : 'nullable', 'exists:jadwal_pengantaran,id'],
+        ], [
+            'jadwal_pengantaran_id.required' => 'Silakan pilih jadwal pengantaran terlebih dahulu.',
         ]);
 
-        // PERBAIKAN: sama seperti show(), pakai DistanceCalculator langsung
-        // supaya jarak & ongkir yang dipakai untuk membuat pesanan konsisten
-        // dengan yang ditampilkan di halaman checkout sebelumnya.
-        $jarakKm = DistanceCalculator::km(
+        $jadwalTerpilih = $adaJadwalAktif
+            ? JadwalPengantaran::aktif()->find($validated['jadwal_pengantaran_id'])
+            : null;
+
+        if ($adaJadwalAktif && ! $jadwalTerpilih) {
+            return back()->withInput()->with('error', 'Jadwal pengantaran yang kamu pilih sudah tidak tersedia. Silakan pilih ulang.');
+        }
+
+        // Area layanan divalidasi berdasarkan kecamatan (bukan radius jarak).
+        if (! DistanceCalculator::areaDilayani($user->kecamatan)) {
+            $kecamatanDilayani = implode(', ', DistanceCalculator::kecamatanDilayani());
+
+            return redirect()->route('cart.index')->with('error',
+                'Maaf, alamat pengiriman kamu berada di luar area layanan Apotek Rizki. '
+                . 'Saat ini pengantaran hanya melayani Kecamatan ' . $kecamatanDilayani . '.'
+            );
+        }
+
+        // PERBAIKAN: sama seperti show(), pakai DistanceCalculator::route()
+        // (jarak jalan sebenarnya via OSRM) supaya jarak & ongkir yang dipakai
+        // untuk membuat pesanan konsisten dengan yang ditampilkan di halaman
+        // checkout sebelumnya.
+        $rute = DistanceCalculator::route(
             config('apotek.latitude'),
             config('apotek.longitude'),
             $user->latitude,
             $user->longitude
         );
 
+        $jarakKm = $rute['jarak_km'];
         $ongkir = DistanceCalculator::ongkirUntukJarak($jarakKm);
-
-        // SEMENTARA: sama seperti show(), pakai fallback ongkir tertinggi
-        // kalau perhitungan jarak gagal, supaya customer tetap bisa checkout.
-        if (is_null($ongkir)) {
-            \Illuminate\Support\Facades\Log::warning('Ongkir fallback dipakai saat membuat pesanan.', [
-                'user_id'  => $user->id,
-                'jarak_km' => $jarakKm,
-                'lat'      => $user->latitude,
-                'lng'      => $user->longitude,
-            ]);
-
-            $ongkir = collect(config('apotek.ongkir_tiers'))->last()['harga'] ?? 15000;
-        }
+        $estimasiMenit = $rute['estimasi_menit'];
 
         $requiresResep = $cartItems->contains(fn ($item) => $item->obat->perluResep());
 
-        $pesanan = DB::transaction(function () use ($user, $cartItems, $validated, $jarakKm, $ongkir) {
+        $pesanan = DB::transaction(function () use ($user, $cartItems, $validated, $jarakKm, $ongkir, $estimasiMenit, $jadwalTerpilih) {
 
             $totalHarga = $cartItems->sum(fn ($item) => $item->obat->harga * $item->quantity);
 
@@ -140,14 +161,21 @@ class CheckoutController extends Controller
             // 'tidak_perlu' dari migration. Begitu customer upload resep nanti
             // di halaman detail pesanan, baru diubah jadi 'menunggu'.
             $pesanan = Pesanan::create([
-                'user_id'           => $user->id,
-                'alamat'            => $user->alamat,
-                'jarak_km'          => $jarakKm,
-                'ongkir'            => $ongkir,
-                'metode_pembayaran' => $validated['metode_pembayaran'],
-                'catatan'           => $validated['catatan'] ?? null,
-                'status'            => 'menunggu_verifikasi',
-                'total_harga'       => $totalHarga,
+                'user_id'               => $user->id,
+                'alamat'                => $user->alamat,
+                'jarak_km'              => $jarakKm,
+                'ongkir'                => $ongkir,
+                'estimasi_menit'        => $estimasiMenit,
+                'metode_pembayaran'     => $validated['metode_pembayaran'],
+                'catatan'               => $validated['catatan'] ?? null,
+                'status'                => 'menunggu_verifikasi',
+                'total_harga'           => $totalHarga,
+                // Snapshot jadwal pengantaran yang dipilih customer, supaya
+                // histori pesanan tetap akurat walau owner nanti mengubah
+                // atau menghapus slot master-nya.
+                'jadwal_pengantaran_id' => $jadwalTerpilih?->id,
+                'jadwal_antar_mulai'    => $jadwalTerpilih?->jam_mulai,
+                'jadwal_antar_selesai'  => $jadwalTerpilih?->jam_selesai,
             ]);
 
             foreach ($cartItems as $item) {

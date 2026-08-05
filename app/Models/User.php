@@ -33,6 +33,8 @@ use Illuminate\Notifications\Notifiable;
     'tanggal_lahir',
     'role',
     'shift',
+    'jam_antar_mulai',
+    'jam_antar_selesai',
     'is_active',
     'jenis_kendaraan',
     'plat_nomor',
@@ -103,5 +105,48 @@ class User extends Authenticatable
             'sore' => 'Sore (17.00 - 22.00)',
             default => 'Belum diatur oleh pemilik apotek',
         };
+    }
+
+    /**
+     * Cek apakah SEKARANG masuk jam antar spesifik kurir ini
+     * (contoh: kurir cuma boleh dapat batch pengiriman jam 10.00-12.00).
+     * Ini lapisan tambahan yang lebih detail di atas isOnShiftNow() —
+     * kurir tetap harus di dalam shift-nya juga.
+     *
+     * Kalau jam_antar_mulai/selesai belum diisi owner untuk kurir ini,
+     * dianggap TIDAK ada jadwal spesifik (return false) supaya owner
+     * wajib mengatur jam antar dulu sebelum kurir bisa dapat batch.
+     */
+    public function adaJadwalAntarSekarang(): bool
+    {
+        if (! config('app.shift_check_enabled', true)) {
+            return true; // bypass untuk testing lokal, sama seperti isOnShiftNow()
+        }
+
+        if (! $this->jam_antar_mulai || ! $this->jam_antar_selesai) {
+            return false;
+        }
+
+        $now = now();
+        $tanggalHariIni = $now->format('Y-m-d');
+        $mulai = \Carbon\Carbon::parse($tanggalHariIni . ' ' . \Carbon\Carbon::parse($this->jam_antar_mulai)->format('H:i:s'));
+        $selesai = \Carbon\Carbon::parse($tanggalHariIni . ' ' . \Carbon\Carbon::parse($this->jam_antar_selesai)->format('H:i:s'));
+
+        return $now->between($mulai, $selesai);
+    }
+
+    /**
+     * Label jam antar yang enak dibaca untuk ditampilkan di profil kurir
+     * dan halaman staff (owner).
+     */
+    public function jadwalAntarLabel(): string
+    {
+        if (! $this->jam_antar_mulai || ! $this->jam_antar_selesai) {
+            return 'Belum diatur oleh pemilik apotek';
+        }
+
+        $format = fn ($t) => \Carbon\Carbon::parse($t)->format('H:i');
+
+        return $format($this->jam_antar_mulai) . ' - ' . $format($this->jam_antar_selesai);
     }
 }

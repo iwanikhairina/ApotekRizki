@@ -10,6 +10,7 @@ class KurirPesananController extends Controller
     {
         $pesanan = Pesanan::with('user')
             ->where('status', 'siap_dikirim')
+            ->whereNull('kurir_id')
             ->latest()
             ->get();
 
@@ -34,27 +35,28 @@ public function show($id)
             return back()->with('shift_error', 'Kamu sedang di luar jam shift (' . $kurir->shiftLabel() . '). Tidak bisa mengambil pesanan saat ini.');
         }
 
-        // Batasi: kurir hanya boleh punya 1 pengiriman aktif
-        $sedangAktif = Pesanan::where('kurir_id', $kurir->id)->where('status', 'dikirim')->exists();
+        // Kalau kurir sedang di tengah perjalanan mengantar batch, jangan
+        // biarkan ambil pesanan baru dulu.
+        $sedangAntar = \App\Models\PengirimanBatch::where('kurir_id', $kurir->id)
+            ->where('status', 'berjalan')
+            ->exists();
 
-        if ($sedangAktif) {
-            return back()->with('shift_error', 'Kamu masih memiliki pengiriman yang sedang berlangsung. Selesaikan pengiriman itu terlebih dahulu sebelum mengambil pesanan baru.');
+        if ($sedangAntar) {
+            return back()->with('shift_error', 'Kamu masih punya batch pengiriman yang sedang berjalan. Selesaikan dulu semua rumah di batch itu sebelum mengambil pesanan baru.');
         }
 
         $pesanan = Pesanan::findOrFail($id);
 
-        // Cek juga apakah pesanan ini masih tersedia (belum diambil kurir lain)
-        if ($pesanan->status !== 'siap_dikirim') {
+        if ($pesanan->status !== 'siap_dikirim' || $pesanan->kurir_id) {
             return redirect()->route('kurir.pesanan')->with('shift_error', 'Pesanan ini sudah diambil kurir lain.');
         }
 
-        $pesanan->update([
-            'status'          => 'dikirim',
-            'kurir_id'        => $kurir->id,
-            'waktu_diambil'   => now(),
-            'estimasi_menit'  => $pesanan->hitungEstimasiMenit(),
-        ]);
+        // Cuma "diklaim" dulu (masuk antrian kurir ini), belum berangkat.
+        // Kurir bisa ambil beberapa pesanan lain juga sebelum menekan
+        // tombol "Mulai" di halaman Pengiriman — nanti semuanya digabung
+        // jadi satu batch dan diurutkan dari rumah terdekat.
+        $pesanan->update(['kurir_id' => $kurir->id]);
 
-        return redirect()->route('kurir.pengiriman')->with('success', 'Pesanan berhasil diambil dan sedang diantar.');
+        return redirect()->route('kurir.pengiriman')->with('success', 'Pesanan P' . str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) . ' ditambahkan ke antrian pengantaran kamu.');
     }
 }

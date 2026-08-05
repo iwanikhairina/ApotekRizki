@@ -18,9 +18,8 @@
         --muted:#7C8B84;
         --white:#FFFFFF;
         --error:#E0503B;
-        --amber:#E8A33D;
+        --amber:#F5A623;
         --shadow-sm:0 6px 16px -8px rgba(29,43,38,0.14);
-        --shadow-md:0 20px 40px -16px rgba(29,43,38,0.18);
     }
 
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -35,405 +34,169 @@
     a{text-decoration:none; color:inherit;}
     button{font-family:inherit;}
 
-    .hero{
-        max-width:1240px;
-        margin:0 auto;
-        padding:34px 28px 10px;
-    }
-
-    .hero-greeting{
-        font-family:'Outfit', sans-serif;
-        font-weight:700;
-        font-size:24px;
-        color:var(--ink);
-        margin-bottom:4px;
-    }
-
-    .hero-sub{
-        font-size:13.5px;
-        color:var(--muted);
-    }
-
-    .promo-banner{
-        max-width:1240px;
-        margin:22px auto 0;
-        padding:0 28px;
-    }
-
-    .promo-inner{
-        background:linear-gradient(120deg, var(--amber) 0%, #C9821F 100%);
-        border-radius:24px;
-        padding:22px 28px;
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:20px;
-        color:var(--white);
-        flex-wrap:wrap;
-    }
-
-    .promo-text{display:flex; align-items:center; gap:14px;}
-
-    .promo-text .promo-ic{
-        width:42px; height:42px;
-        border-radius:12px;
-        background:rgba(255,255,255,0.22);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        flex-shrink:0;
-    }
-    .promo-text .promo-ic svg{width:22px; height:22px;}
-
-    .promo-text h3{
-        font-family:'Outfit', sans-serif;
-        font-size:16px;
-        font-weight:700;
-        margin-bottom:2px;
-    }
-    .promo-text p{
-        font-size:12.5px;
-        opacity:.95;
-        max-width:420px;
-    }
-
-    .promo-btn{
+    .navbar{
+        position:sticky; top:0; z-index:50;
         background:var(--white);
-        color:#B97F22;
-        border:none;
-        padding:12px 22px;
-        border-radius:999px;
-        font-family:'Outfit', sans-serif;
-        font-weight:700;
-        font-size:13px;
-        cursor:pointer;
-        display:flex;
-        align-items:center;
-        gap:8px;
-        flex-shrink:0;
-        transition:transform .12s;
+        border-bottom:1px solid var(--mint-deep);
     }
-    .promo-btn:hover{transform:translateY(-2px);}
-    .promo-btn svg{width:16px; height:16px;}
+    .navbar-inner{
+        max-width:640px; margin:0 auto; padding:14px 28px;
+        display:flex; align-items:center; gap:16px;
+    }
+    .back-link{
+        display:flex; align-items:center; gap:8px;
+        font-weight:600; font-size:13.5px; color:var(--muted);
+        padding:9px 14px; border-radius:999px; transition:background .15s, color .15s;
+    }
+    .back-link:hover{background:var(--mint); color:var(--ink);}
+    .back-link svg{width:17px; height:17px;}
+    .navbar-title{
+        font-family:'Outfit', sans-serif; font-weight:700; font-size:15px;
+    }
 
-    .profile-section{
-        max-width:1240px;
+    .wrap{
+        max-width:640px;
         margin:0 auto;
-        padding:28px 28px 60px;
-        display:grid;
-        grid-template-columns: 300px 1fr;
-        gap:22px;
-        align-items:start;
+        padding:32px 24px 60px;
     }
+
+    .alert{
+        display:flex;
+        gap:10px;
+        align-items:flex-start;
+        background:#E8F8EF;
+        border:1px solid var(--mint-deep);
+        color:var(--spring-deep);
+        padding:14px 16px;
+        border-radius:14px;
+        font-size:13px;
+        font-weight:600;
+        margin-bottom:20px;
+    }
+    .alert svg{width:18px; height:18px; flex-shrink:0; margin-top:1px;}
 
     .id-card{
         background:linear-gradient(150deg, var(--spring) 0%, var(--spring-deep) 100%);
         border-radius:24px;
-        padding:30px 24px;
-        color:var(--white);
+        padding:32px 24px;
+        color:#fff;
         text-align:center;
         box-shadow:var(--shadow-sm);
+        margin-bottom:20px;
     }
-
     .id-card .avatar-big{
-        width:84px; height:84px;
-        border-radius:50%;
+        width:80px; height:80px; border-radius:50%;
         background:var(--amber);
-        border:4px solid rgba(255,255,255,0.5);
+        border:4px solid rgba(255,255,255,.5);
         margin:0 auto 16px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-family:'Outfit', sans-serif;
-        font-weight:700;
-        font-size:30px;
+        display:flex; align-items:center; justify-content:center;
+        font-family:'Outfit', sans-serif; font-weight:700; font-size:28px;
         color:var(--spring-deep);
     }
-
-    .id-card h2{
-        font-family:'Outfit', sans-serif;
-        font-weight:700;
-        font-size:19px;
-        margin-bottom:4px;
+    .id-card h2{font-family:'Outfit', sans-serif; font-weight:700; font-size:19px; margin-bottom:4px;}
+    .id-card .id-email{font-size:12.5px; opacity:.85; margin-bottom:16px; word-break:break-word;}
+    .id-card .id-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+    .id-card .btn-mini{
+        display:inline-flex; align-items:center; gap:6px;
+        background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35);
+        color:#fff; font-family:'Outfit', sans-serif; font-weight:700; font-size:12.5px;
+        padding:9px 16px; border-radius:999px; cursor:pointer; transition:.15s ease;
     }
+    .id-card .btn-mini:hover{background:rgba(255,255,255,.28);}
+    .id-card .btn-mini.danger:hover{background:rgba(224,80,59,.85); border-color:transparent;}
 
-    .id-card .id-email{
-        font-size:12.5px;
-        opacity:.85;
-        margin-bottom:18px;
-        word-break:break-word;
-    }
-
-    .id-card .id-tag{
-        display:inline-block;
-        font-size:11px;
-        font-weight:600;
-        background:rgba(255,255,255,0.18);
-        padding:5px 14px;
-        border-radius:999px;
-        margin-bottom:22px;
-    }
-
-    .id-card .edit-link{
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:8px;
+    .card{
         background:var(--white);
-        color:var(--spring-deep);
-        font-family:'Outfit', sans-serif;
-        font-weight:700;
-        font-size:13px;
-        padding:12px;
-        border-radius:14px;
-        transition:transform .12s;
-    }
-    .id-card .edit-link:hover{transform:translateY(-2px);}
-    .id-card .edit-link svg{width:16px; height:16px;}
-
-    .id-card .logout-form{margin-top:10px;}
-
-    .id-card .logout-btn{
-        width:100%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:8px;
-        background:rgba(255,255,255,0.12);
-        border:1px solid rgba(255,255,255,0.35);
-        color:var(--white);
-        font-family:'Outfit', sans-serif;
-        font-weight:700;
-        font-size:13px;
-        padding:11px;
-        border-radius:14px;
-        cursor:pointer;
-        transition:background .15s, transform .12s;
-    }
-    .id-card .logout-btn:hover{background:rgba(224,80,59,0.85); border-color:transparent;}
-    .id-card .logout-btn:active{transform:scale(.98);}
-    .id-card .logout-btn svg{width:16px; height:16px;}
-
-    .detail-card{
-        background:var(--white);
-        border-radius:24px;
-        padding:8px 0;
+        border-radius:20px;
+        padding:22px 24px 8px;
         box-shadow:var(--shadow-sm);
+        margin-bottom:20px;
     }
-
-    .detail-heading{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        padding:20px 26px 14px;
+    .card h3{
+        font-family:'Outfit', sans-serif; font-weight:700; font-size:15px;
+        display:flex; align-items:center; gap:8px; margin-bottom:14px;
     }
+    .card h3 svg{width:17px; height:17px; color:var(--spring-deep);}
 
-    .detail-heading h3{
-        font-family:'Outfit', sans-serif;
-        font-size:16px;
-        font-weight:700;
+    .info-row{
+        display:flex; justify-content:space-between; gap:12px;
+        padding:12px 0; border-bottom:1px solid #F0F4F2;
+        font-size:13.5px;
     }
-
-    .detail-heading a{
-        font-size:12.5px;
-        font-weight:700;
-        color:var(--spring-deep);
-        background:var(--mint);
-        padding:8px 14px;
-        border-radius:999px;
-        display:flex;
-        align-items:center;
-        gap:6px;
-        transition:background .15s;
-    }
-    .detail-heading a:hover{background:var(--mint-deep);}
-    .detail-heading a svg{width:14px; height:14px;}
-
-    .detail-list{
-        display:flex;
-        flex-direction:column;
-    }
-
-    .detail-row{
-        display:flex;
-        align-items:flex-start;
-        gap:16px;
-        padding:16px 26px;
-        border-top:1px solid var(--mint);
-    }
-
-    .detail-row .row-ic{
-        width:38px; height:38px;
-        border-radius:11px;
-        background:var(--mint);
-        color:var(--spring-deep);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        flex-shrink:0;
-    }
-    .detail-row .row-ic svg{width:18px; height:18px;}
-
-    .detail-row .row-body{flex:1; min-width:0;}
-
-    .detail-row .row-label{
-        font-size:11px;
-        font-weight:700;
-        text-transform:uppercase;
-        letter-spacing:.04em;
-        color:var(--muted);
-        margin-bottom:3px;
-    }
-
-    .detail-row .row-value{
-        font-size:14.5px;
-        font-weight:600;
-        color:var(--ink);
-        word-break:break-word;
-    }
-
-    .detail-row .row-value.empty{
-        color:var(--muted);
-        font-weight:500;
-        font-style:italic;
-    }
-
-    @media (max-width:920px){
-        .profile-section{grid-template-columns:1fr;}
-    }
+    .info-row:last-child{border-bottom:none;}
+    .info-row .label{color:var(--muted);}
+    .info-row .value{font-weight:700; color:var(--ink); text-align:right;}
 
     @media (max-width:560px){
-        .hero{padding:26px 18px 6px;}
-        .promo-banner{padding:0 18px;}
-        .profile-section{padding:22px 18px 50px;}
-        .hero-greeting{font-size:20px;}
-        .promo-inner{flex-direction:column; align-items:flex-start;}
-        .promo-btn{width:100%; justify-content:center;}
+        .navbar-inner{padding:12px 18px;}
+        .wrap{padding:24px 16px 50px;}
+        .card{padding:18px 18px 4px;}
     }
 </style>
 </head>
 <body>
 
-@php
-    $isIncomplete = empty($user->phone) || empty($user->birth_date) || empty($user->alamat);
-@endphp
-
-<x-customer-navbar />
-
-<header class="hero">
-    <h1 class="hero-greeting">Profil Saya</h1>
-    <p class="hero-sub">Kelola data diri kamu supaya pesanan lebih cepat dan akurat.</p>
-</header>
-
-@if($isIncomplete)
-<section class="promo-banner">
-    <div class="promo-inner">
-        <div class="promo-text">
-            <span class="promo-ic">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
-            </span>
-            <div>
-                <h3>Lengkapi profil kamu</h3>
-                <p>Nomor HP, tanggal lahir, dan alamat masih ada yang kosong. Data ini dibutuhkan untuk pengiriman dan verifikasi beberapa produk.</p>
-            </div>
-        </div>
-        <a href="{{ route('profile.edit') }}" class="promo-btn">
-            Lengkapi Profil
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="{{ route('dashboard') }}" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Kembali
         </a>
+        <span class="navbar-title">Profil Saya</span>
     </div>
-</section>
-@endif
+</nav>
 
-<section class="profile-section">
+<div class="wrap">
+
+    @if(session('status'))
+        <div class="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ session('status') }}
+        </div>
+    @endif
+
     <div class="id-card">
         <div class="avatar-big">{{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}</div>
         <h2>{{ $user->name ?? '-' }}</h2>
         <div class="id-email">{{ $user->email ?? '-' }}</div>
-        <span class="id-tag">Pelanggan Apotek Rizki</span>
-        <a href="{{ route('profile.edit') }}" class="edit-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-            Sunting Profil
-        </a>
-
-        <form method="POST" action="{{ route('logout') }}" class="logout-form">
-            @csrf
-            <button type="submit" class="logout-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                Keluar dari Akun
-            </button>
-        </form>
-    </div>
-
-    <div class="detail-card">
-        <div class="detail-heading">
-            <h3>Data Diri</h3>
-            <a href="{{ route('profile.edit') }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                Sunting
+        <div class="id-actions">
+            <a href="{{ route('profile.edit') }}" class="btn-mini">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Sunting Profil
             </a>
-        </div>
-
-        <div class="detail-list">
-            <div class="detail-row">
-                <span class="row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg></span>
-                <div class="row-body">
-                    <div class="row-label">Nama</div>
-                    <div class="row-value">{{ $user->name ?? '-' }}</div>
-                </div>
-            </div>
-
-            <div class="detail-row">
-                <span class="row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-                <div class="row-body">
-                    <div class="row-label">Tanggal Lahir</div>
-                    @if($user->birth_date)
-                        <div class="row-value">{{ \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') }}</div>
-                    @else
-                        <div class="row-value empty">Belum diisi</div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="detail-row">
-                <span class="row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 13a4 4 0 0 0 8 0"/><path d="M9 9h.01M15 9h.01"/></svg></span>
-                <div class="row-body">
-                    <div class="row-label">Jenis Kelamin</div>
-                    <div class="row-value {{ !$user->gender ? 'empty' : '' }}">
-                        @if($user->gender === 'L') Laki-laki
-                        @elseif($user->gender === 'P') Perempuan
-                        @else Belum diisi
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <div class="detail-row">
-                <span class="row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
-                <div class="row-body">
-                    <div class="row-label">Email</div>
-                    <div class="row-value">{{ $user->email ?? '-' }}</div>
-                </div>
-            </div>
-
-            <div class="detail-row">
-                <span class="row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></span>
-                <div class="row-body">
-                    <div class="row-label">No. HP</div>
-                    <div class="row-value {{ !$user->phone ? 'empty' : '' }}">{{ $user->phone ?? 'Belum diisi' }}</div>
-                </div>
-            </div>
-
-            <div class="detail-row">
-                <span class="row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                <div class="row-body">
-                    <div class="row-label">Alamat</div>
-                    <div class="row-value {{ !$user->alamat ? 'empty' : '' }}">{{ $user->alamat ?? 'Belum diisi' }}</div>
-                </div>
-            </div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn-mini danger">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Keluar
+                </button>
+            </form>
         </div>
     </div>
-</section>
+
+    <div class="card">
+        <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+            Data Diri
+        </h3>
+        <div class="info-row"><span class="label">Nama Lengkap</span><span class="value">{{ $user->name ?? '-' }}</span></div>
+        <div class="info-row"><span class="label">Email</span><span class="value">{{ $user->email ?? '-' }}</span></div>
+        <div class="info-row"><span class="label">No. HP</span><span class="value">{{ $user->phone ?? '-' }}</span></div>
+        <div class="info-row"><span class="label">Tanggal Lahir</span><span class="value">{{ $user->birth_date ? $user->birth_date->translatedFormat('d F Y') : '-' }}</span></div>
+        <div class="info-row"><span class="label">Jenis Kelamin</span><span class="value">{{ $user->gender === 'L' ? 'Laki-laki' : ($user->gender === 'P' ? 'Perempuan' : '-') }}</span></div>
+        <div class="info-row"><span class="label">Alamat</span><span class="value">{{ $user->alamat ?? '-' }}</span></div>
+    </div>
+
+    <div class="card">
+        <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Info Akun
+        </h3>
+        <div class="info-row"><span class="label">Username</span><span class="value">{{ $user->username ?? '-' }}</span></div>
+        <div class="info-row"><span class="label">Bergabung Sejak</span><span class="value">{{ $user->created_at ? $user->created_at->translatedFormat('d F Y') : '-' }}</span></div>
+    </div>
+
+</div>
 
 </body>
 </html>

@@ -724,6 +724,15 @@
                     {{ $paymentLabel[$order['payment_method']] ?? 'Belum dipilih' }}
                 </span>
             </div>
+            @if ($order['jadwal_pengantaran_label'])
+                <div class="info-block">
+                    <span class="label">Jadwal Pengantaran</span>
+                    <span class="payment-chip">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        {{ $order['jadwal_pengantaran_label'] }}
+                    </span>
+                </div>
+            @endif
         </div>
 
         <div class="section-title">Rincian Pembayaran</div>
@@ -764,6 +773,20 @@
 </div>
 @endif
 
+@if ($order['jadwal_popup_show'] && $order['jadwal_pengantaran_label'])
+<div class="cancel-modal-backdrop" id="jadwalModal">
+    <div class="cancel-modal">
+        <h3>📦 Info Jadwal Pengantaran</h3>
+        <p>
+            Pesanan Anda dijadwalkan untuk diantar pada pukul <strong>{{ $order['jadwal_pengantaran_label'] }}</strong>. Kamu bisa melihat kembali jadwal ini kapan saja di bagian Informasi Pengiriman pada halaman ini.
+        </p>
+        <div class="cancel-modal-actions">
+            <button type="button" class="cancel-modal-btn primary" id="closeJadwalModal" style="background:var(--spring);">Mengerti</button>
+        </div>
+    </div>
+</div>
+@endif
+
 <script>
 (function(){
     const input = document.getElementById('resepInput');
@@ -790,6 +813,21 @@
         closeCancelModal.addEventListener('click', () => cancelModal.classList.remove('open'));
         cancelModal.addEventListener('click', (e) => {
             if (e.target === cancelModal) cancelModal.classList.remove('open');
+        });
+    }
+
+    // Popup jadwal pengantaran: server hanya mengirim elemen ini ke halaman
+    // saat pop-up memang harus tampil (pertama kali dibuka / baru dibuat).
+    // Kunjungan berikutnya tidak akan me-render elemen ini lagi.
+    const jadwalModal = document.getElementById('jadwalModal');
+    const closeJadwalModal = document.getElementById('closeJadwalModal');
+
+    if (jadwalModal) {
+        setTimeout(() => jadwalModal.classList.add('open'), 350);
+
+        closeJadwalModal.addEventListener('click', () => jadwalModal.classList.remove('open'));
+        jadwalModal.addEventListener('click', (e) => {
+            if (e.target === jadwalModal) jadwalModal.classList.remove('open');
         });
     }
 })();
