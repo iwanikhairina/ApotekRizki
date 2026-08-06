@@ -40,16 +40,24 @@ class CartController extends Controller
             // luar area lewat AlamatController, tapi dicek ulang di sini
             // untuk berjaga-jaga terhadap alamat lama yang tersimpan
             // sebelum validasi ini ada.
-            $bisaDiantar = DistanceCalculator::areaDilayani($user->kecamatan);
+            $bisaDiantar = DistanceCalculator::areaDilayaniUntukUser($user->kecamatan, $user->alamat);
         }
 
+        // Minimal total belanja dihitung dari SUBTOTAL produk saja (tidak
+        // termasuk ongkir), supaya konsisten walau ongkir belum bisa
+        // dihitung (mis. alamat belum diisi).
+        $minimumBelanja = config('apotek.minimum_belanja', 0);
+        $memenuhiMinimum = $subtotal >= $minimumBelanja;
+
         $summary = [
-            'item_count'    => $cartItems->sum('quantity'),
-            'subtotal'      => $subtotal,
-            'jarak_km'      => $jarakKm,
-            'ongkir'        => $ongkir,
-            'bisa_diantar'  => $bisaDiantar,
-            'total'         => $subtotal + ($ongkir ?? 0),
+            'item_count'       => $cartItems->sum('quantity'),
+            'subtotal'         => $subtotal,
+            'jarak_km'         => $jarakKm,
+            'ongkir'           => $ongkir,
+            'bisa_diantar'     => $bisaDiantar,
+            'total'            => $subtotal + ($ongkir ?? 0),
+            'minimum_belanja'  => $minimumBelanja,
+            'memenuhi_minimum' => $memenuhiMinimum,
         ];
 
         return view('customer.cart', compact('cartItems', 'summary', 'user', 'alamatLengkap'));

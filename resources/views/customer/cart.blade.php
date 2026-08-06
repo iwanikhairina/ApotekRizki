@@ -334,6 +334,17 @@
         </div>
     @endif
 
+    {{-- ===== WARNING: total belanja belum mencapai minimum ===== --}}
+    @if($cartItems->count() > 0 && !$summary['memenuhi_minimum'])
+        <div class="warn-banner amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="m10.29 3.86-8.18 14.18A2 2 0 0 0 3.93 21h16.14a2 2 0 0 0 1.82-2.96L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+            <div class="warn-body">
+                <b>Oops! Total belanja belum mencukupi.</b>
+                Untuk melanjutkan pemesanan, minimal total belanja adalah Rp{{ number_format($summary['minimum_belanja'], 0, ',', '.') }}. Yuk, tambahkan produk ke keranjang Anda.
+            </div>
+        </div>
+    @endif
+
     @if($cartItems->count() === 0)
         <div class="empty-cart">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.6a2 2 0 0 0 2-1.6L23 6H6"/></svg>
@@ -413,7 +424,7 @@
             <span class="ongkir-note">Ongkir dihitung setelah alamat diisi</span>
         @endif
     </div>
-    <button type="button" class="beli-btn" id="beliBtn" {{ (!$alamatLengkap || !$summary['bisa_diantar']) ? 'disabled' : '' }}>
+    <button type="button" class="beli-btn" id="beliBtn" {{ (!$alamatLengkap || !$summary['bisa_diantar'] || !$summary['memenuhi_minimum']) ? 'disabled' : '' }}>
         Beli
     </button>
 </div>
@@ -454,12 +465,21 @@
     });
 
     const ongkir = {{ $summary['ongkir'] ?? 0 }};
+    const minimumBelanja = {{ $summary['minimum_belanja'] ?? 0 }};
+    const alamatLengkap = {{ $alamatLengkap ? 'true' : 'false' }};
+    const bisaDiantar = {{ ($summary['bisa_diantar'] ?? false) ? 'true' : 'false' }};
 
     function recalcTotal(){
         let subtotal = 0;
         Object.values(subtotalPerItem).forEach(i => subtotal += i.price * i.qty);
         const footerTotal = document.getElementById('footerTotal');
         if(footerTotal) footerTotal.textContent = 'Rp' + (subtotal + ongkir).toLocaleString('id-ID');
+
+        // Update status tombol "Beli" secara langsung kalau subtotal berubah
+        // melewati ambang minimum belanja, tanpa perlu reload halaman.
+        if(beliBtn){
+            beliBtn.disabled = !alamatLengkap || !bisaDiantar || subtotal < minimumBelanja;
+        }
     }
 
     document.querySelectorAll('.cart-item').forEach(itemEl => {

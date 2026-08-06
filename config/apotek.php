@@ -13,6 +13,10 @@ return [
     // Radius layanan maksimum (km) sesuai cakupan Kec. Bebesen, Kebayakan, Pegasing,
     // dan sekitar Danau Laut Tawar.
     'radius_maksimum_km' => 18,
+
+    // Minimal total belanja (subtotal produk, TIDAK termasuk ongkir) supaya
+    // customer bisa lanjut ke checkout.
+    'minimum_belanja' => 10000,
 // Untuk testing lokal saja — set true untuk bypass pengecekan jam shift apoteker.
 // WAJIB false lagi sebelum deploy / sidang, supaya validasi shift tetap berfungsi.
 'abaikan_cek_shift' => env('APOTEK_ABAIKAN_SHIFT', false),

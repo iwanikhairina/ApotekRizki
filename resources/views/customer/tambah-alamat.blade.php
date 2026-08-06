@@ -451,9 +451,47 @@
                 const alamatLengkap = data.display_name || '';
 
                 const provinsi = addr.state || '';
-                const kota = addr.county || addr.city || addr.regency || addr.state_district || '';
-                const kecamatan = addr.city_district || addr.suburb || addr.municipality || '';
-                const kelurahan = addr.village || addr.suburb || addr.neighbourhood || addr.hamlet || '';
+
+                // Nominatim TIDAK konsisten menandai level kecamatan/kabupaten
+                // di seluruh Indonesia. Di kabupaten (mis. Aceh Tengah), nama
+                // kecamatan sering muncul di field "county" (bukan
+                // "city_district"), sedangkan nama kabupatennya sendiri
+                // muncul di "state_district". Di kota besar, kecamatan
+                // biasanya di "city_district"/"suburb". Supaya tidak salah
+                // ambil (mis. "Bebesen" kepilih jadi kota, bukan kecamatan),
+                // cocokkan dulu semua field kandidat ke daftar kecamatan yang
+                // dilayani Apotek Rizki, baru fallback ke urutan prioritas
+                // biasa kalau tidak ada yang cocok.
+                //
+                // PENTING: daftar ini harus selalu sinkron dengan
+                // DistanceCalculator::KECAMATAN_DILAYANI_DEFAULT / config
+                // apotek.kecamatan_dilayani di backend.
+                const kecamatanDilayani = ['Kebayakan', 'Bebesen', 'Pegasing', 'Lut Tawar'];
+                const kandidatKecamatan = [
+                    addr.city_district,
+                    addr.suburb,
+                    addr.county,
+                    addr.municipality,
+                    addr.town,
+                ].filter(Boolean);
+
+                let kecamatan = kandidatKecamatan.find((nilai) =>
+                    kecamatanDilayani.some((k) => nilai.toLowerCase().includes(k.toLowerCase()))
+                );
+                if (!kecamatan) {
+                    // Tidak ada kandidat yang cocok dengan area layanan —
+                    // pakai urutan prioritas standar sebagai fallback.
+                    kecamatan = addr.city_district || addr.suburb || addr.municipality || '';
+                }
+
+                // Field kota/kabupaten dihitung TERPISAH dari kecamatan (jangan
+                // pakai "county" duluan di sini, karena di banyak kabupaten
+                // "county" itu isinya nama kecamatan, bukan nama kabupaten).
+                const kota = addr.state_district || addr.regency || addr.city
+                    || (addr.county && addr.county !== kecamatan ? addr.county : '') || '';
+
+                const kelurahan = addr.village || addr.neighbourhood || addr.hamlet
+                    || (addr.suburb && addr.suburb !== kecamatan ? addr.suburb : '') || '';
                 const kodePos = addr.postcode || '';
 
                 document.getElementById('inputLat').value = lat;

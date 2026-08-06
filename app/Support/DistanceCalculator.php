@@ -181,6 +181,42 @@ class DistanceCalculator
         return false;
     }
 
+    /**
+     * Sama seperti areaDilayani(), TAPI dengan fallback tambahan: kalau
+     * kolom kecamatan gagal cocok (mis. data lama yang tersimpan sebelum
+     * perbaikan ekstraksi kecamatan di form tambah-alamat, sehingga
+     * isinya keliru — misal kena nama desa, bukan nama kecamatan),
+     * dicoba lagi dengan mencari nama kecamatan yang dilayani di dalam
+     * teks alamat lengkap (mis. "Umang, Bebesen, Aceh Tengah, ...").
+     *
+     * Pakai method ini (bukan areaDilayani() polos) di mana pun kita
+     * sudah punya alamat lengkap user, supaya alamat lama yang datanya
+     * sempat salah tersimpan tetap bisa lolos selama teks alamatnya
+     * memang menyebut kecamatan yang dilayani.
+     */
+    public static function areaDilayaniUntukUser(?string $kecamatan, ?string $alamatLengkap = null): bool
+    {
+        if (self::areaDilayani($kecamatan)) {
+            return true;
+        }
+
+        $alamatNormalisasi = strtolower(trim((string) $alamatLengkap));
+
+        if ($alamatNormalisasi === '') {
+            return false;
+        }
+
+        foreach (self::kecamatanDilayani() as $kecamatanDilayani) {
+            $target = strtolower(trim($kecamatanDilayani));
+
+            if ($target !== '' && str_contains($alamatNormalisasi, $target)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static function normalisasiKecamatan(?string $kecamatan): string
     {
         $kecamatan = strtolower(trim((string) $kecamatan));

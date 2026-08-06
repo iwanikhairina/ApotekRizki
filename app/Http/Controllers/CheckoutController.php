@@ -38,7 +38,7 @@ class CheckoutController extends Controller
         // dicegah tersimpan kalau di luar area lewat AlamatController, tapi
         // dicek ulang di sini untuk berjaga-jaga terhadap alamat lama yang
         // tersimpan sebelum validasi ini ada.
-        if (! DistanceCalculator::areaDilayani($user->kecamatan)) {
+        if (! DistanceCalculator::areaDilayaniUntukUser($user->kecamatan, $user->alamat)) {
             $kecamatanDilayani = implode(', ', DistanceCalculator::kecamatanDilayani());
 
             return redirect()->route('cart.index')->with('error',
@@ -48,6 +48,17 @@ class CheckoutController extends Controller
         }
 
         $subtotal = $cartItems->sum(fn ($item) => $item->obat->harga * $item->quantity);
+
+        // Total belanja (subtotal produk, tidak termasuk ongkir) harus
+        // memenuhi minimum sebelum lanjut checkout.
+        $minimumBelanja = config('apotek.minimum_belanja', 0);
+
+        if ($subtotal < $minimumBelanja) {
+            return redirect()->route('cart.index')->with('error',
+                'Oops! Total belanja belum mencukupi. Untuk melanjutkan pemesanan, minimal total belanja adalah '
+                . 'Rp' . number_format($minimumBelanja, 0, ',', '.') . '. Yuk, tambahkan produk ke keranjang Anda.'
+            );
+        }
 
         $rute = DistanceCalculator::route(
             config('apotek.latitude'),
@@ -102,6 +113,20 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Lengkapi alamat pengiriman terlebih dahulu.');
         }
 
+        // Total belanja (subtotal produk, tidak termasuk ongkir) harus
+        // memenuhi minimum. Dicek ulang di sini (bukan cuma di show())
+        // untuk berjaga-jaga kalau customer submit checkout langsung tanpa
+        // lewat halaman show(), misalnya lewat request manual.
+        $minimumBelanja = config('apotek.minimum_belanja', 0);
+        $subtotalCek = $cartItems->sum(fn ($item) => $item->obat->harga * $item->quantity);
+
+        if ($subtotalCek < $minimumBelanja) {
+            return redirect()->route('cart.index')->with('error',
+                'Oops! Total belanja belum mencukupi. Untuk melanjutkan pemesanan, minimal total belanja adalah '
+                . 'Rp' . number_format($minimumBelanja, 0, ',', '.') . '. Yuk, tambahkan produk ke keranjang Anda.'
+            );
+        }
+
         // Jadwal pengantaran wajib dipilih HANYA kalau owner memang sudah
         // mengatur minimal satu slot aktif. Kalau belum ada slot sama sekali,
         // fitur ini belum "aktif" dipakai toko dan checkout tetap jalan normal.
@@ -124,7 +149,7 @@ class CheckoutController extends Controller
         }
 
         // Area layanan divalidasi berdasarkan kecamatan (bukan radius jarak).
-        if (! DistanceCalculator::areaDilayani($user->kecamatan)) {
+        if (! DistanceCalculator::areaDilayaniUntukUser($user->kecamatan, $user->alamat)) {
             $kecamatanDilayani = implode(', ', DistanceCalculator::kecamatanDilayani());
 
             return redirect()->route('cart.index')->with('error',
